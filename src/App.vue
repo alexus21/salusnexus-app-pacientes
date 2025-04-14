@@ -1,7 +1,7 @@
 <template>
-    <HeaderComponent v-if="!hideHeader" @open-register-component="showRegisterModal" @open-login-component="showLoginModal"></HeaderComponent>
-    <RegisterComponent v-if="showRegisterComponent" @close="showRegisterComponent = false"></RegisterComponent>
-    <LoginPage v-if="showLoginComponent" @close="showLoginComponent = false"></LoginPage>
+    <HeaderComponent v-if="!hideHeader" @open-register-component="showRegisterModal" @open-login-component="showLoginModal" />
+    <RegisterComponent v-if="showRegisterComponent" @close="showRegisterComponent = false" />
+    <LoginComponent v-if="showLoginComponent" @close="showLoginComponent = false" />
     <router-view></router-view>
 </template>
 
@@ -16,7 +16,7 @@ export default {
     components: {
         HeaderComponent,
         RegisterComponent: RegisterPage,
-        LoginPage
+        LoginComponent: LoginPage
     },
     data(){
         return {
