@@ -185,7 +185,7 @@ export default {
     data() {
         return {
             isLoading: true,
-            showPaymentForm: true,
+            showPaymentForm: false,
             selectedPaymentMethod: 'visa',
             card_form: {
                 card_number: '',
@@ -230,30 +230,8 @@ export default {
                 console.log(data);
                 this.isLoading = false;
 
-                /*if (!data.status) {
-                    // No hay suscripción activa, mostrar alerta para confirmar
-                    swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message,
-                        showCancelButton: true,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Sí, suscribirme',
-                        cancelButtonText: 'Cancelar',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Usuario confirma querer suscribirse, mostrar formulario
-                            this.showPaymentForm = true;
-                        } else {
-                            // Usuario cancela, redirigir a Home
-                            this.goToHome();
-                        }
-                    });
-                    return;
-                }*/
-
                 // Ya está suscrito, mostrar alerta y redirigir a Home
-                if(data.success){
+                if(data.status){
                     swal.fire({
                         icon: 'success',
                         title: 'Ya estás suscrito',
@@ -262,7 +240,10 @@ export default {
                         this.showPaymentForm = false;
                         this.goToHome();
                     });
+                    return;
                 }
+
+                this.showPaymentForm = true;
 
             } catch (error) {
                 this.isLoading = false;
