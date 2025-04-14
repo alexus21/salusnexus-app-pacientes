@@ -185,7 +185,7 @@ export default {
     data() {
         return {
             isLoading: true,
-            showPaymentForm: false,
+            showPaymentForm: true,
             selectedPaymentMethod: 'visa',
             card_form: {
                 card_number: '',
@@ -230,7 +230,7 @@ export default {
                 console.log(data);
                 this.isLoading = false;
 
-                if (!data.status) {
+                /*if (!data.status) {
                     // No hay suscripción activa, mostrar alerta para confirmar
                     swal.fire({
                         icon: 'error',
@@ -250,16 +250,19 @@ export default {
                         }
                     });
                     return;
-                }
+                }*/
 
                 // Ya está suscrito, mostrar alerta y redirigir a Home
-                swal.fire({
-                    icon: 'success',
-                    title: 'Ya estás suscrito',
-                    text: data.message,
-                }).then(() => {
-                    this.goToHome();
-                });
+                if(data.success){
+                    swal.fire({
+                        icon: 'success',
+                        title: 'Ya estás suscrito',
+                        text: data.message,
+                    }).then(() => {
+                        this.showPaymentForm = false;
+                        this.goToHome();
+                    });
+                }
 
             } catch (error) {
                 this.isLoading = false;
