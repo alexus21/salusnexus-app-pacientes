@@ -85,6 +85,7 @@
 import swal from 'sweetalert2';
 
 const API_URL = process.env.VUE_APP_API_URL;
+// const PROFESSIONALS_DOMAIN = process.env.VUE_PROFESSIONALS;
 
 export default {
     name: 'LoginPage',
@@ -107,12 +108,12 @@ export default {
                 body: JSON.stringify(this.form)
             })
                 .then(response => response.json())
-                .then(responseData => {
-                    console.log(responseData);
-                    if (!responseData.status) {
-                        if (responseData.errors) {
-                            this.errors = responseData.errors;
-                            const errorMessages = Object.values(responseData.errors).join('\n');
+                .then(data => {
+                    console.log(data);
+                    if (!data.status) {
+                        if (data.errors) {
+                            this.errors = data.errors;
+                            const errorMessages = Object.values(data.errors).join('\n');
                             swal.fire({
                                 icon: 'error',
                                 title: '¡Error!',
@@ -124,16 +125,16 @@ export default {
                         swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: responseData.message,
+                            text: data.message,
                         });
                         return;
                     }
 
                     // Guardamos los datos de respuesta
-                    const token = responseData.data.access_token;
+                    const token = data.access_token;
 
                     localStorage.setItem('token', token);
-                    localStorage.setItem('user', JSON.stringify(responseData.data.user));
+                    localStorage.setItem('user', JSON.stringify(data.user));
                     this.$router.push({ name: 'loginHome' });
                 })
                 .catch(error => {
@@ -670,8 +671,6 @@ export default {
     .new-account-text {
         position: absolute;
         bottom: 85px;
-        left: 0;
-        width: 100%;
         text-align: center;
         margin: 0;
         font-weight: 600;

@@ -30,8 +30,8 @@
 
                     <div class="user-profile dropdown">
                         <img
-                            src="https://salusnexus-app.s3.us-east-2.amazonaws.com/images/e565a505-8601-403a-8649-cb9fd7bdb77c.png"
-                            alt="Dr. Mario García"
+                            :src="profilePicImage"
+                            alt="Photo"
                             class="profile-img dropdown-toggle"
                             id="profileDropdown"
                             data-bs-toggle="dropdown"
@@ -102,12 +102,6 @@
                         <i class="fas fa-percentage"></i>
                     </div>
                 </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <button class="dashboard-btn" @click="goToDashboard">
-                    <i class="fas fa-th-large"></i> Ir al Dashboard Completo
-                </button>
             </div>
 
             <div class="potential-patients-section">
@@ -214,7 +208,8 @@
 </template>
 
 <script>
-import swal from "sweetalert2";
+
+const API_IMAGES_URL = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'LoginHome',
@@ -275,16 +270,17 @@ export default {
             user: null,
             fullName: null,
             partialName: null,
+            profilePicImage: null
         }
     },
-
     mounted() {
         this.user = JSON.parse(localStorage.getItem('user'));
         if (!this.user) {
             this.$router.push({name: 'Login'});
         }
         this.fullName = this.getFullName();
-        this.partialName = this.getPartalNme();
+        this.partialName = this.getPartialNme();
+        this.setProfilePic();
     },
     methods: {
         getFullName() {
@@ -293,8 +289,14 @@ export default {
             }
             return 'Cargando...';
         },
-
-        getPartalNme(){
+        setProfilePic(){
+            if (this.user && this.user.profile_photo_path) {
+                this.profilePicImage = API_IMAGES_URL + '/' + this.user.profile_photo_path;
+            } else {
+                this.profilePicImage = 'https://salusnexus-app.s3.us-east-2.amazonaws.com/images/2868b57e-c141-4948-97eb-84475e246755.png';
+            }
+        },
+        getPartialNme(){
             //Obtener solo primer nombre y primer apellido
             if (this.user && this.user.first_name && this.user.last_name) {
                 const firstName = this.user.first_name.split(' ')[0];
@@ -314,16 +316,8 @@ export default {
             this.$router.push({name: 'UserProfile'});
         },
         logout() {
-            localStorage.removeItem('token');
+            localStorage.clear();
             window.location.reload();
-        },
-        goToDashboard() {
-            swal.fire({
-                title: '¡Atención!',
-                text: 'Aún no hay un dashboard para pacientes. Pronto...',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-            });
         }
     }
 }
