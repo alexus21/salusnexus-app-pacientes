@@ -36,23 +36,22 @@ export default {
                         },
                     })
                         .then((response) => response.json())
-                        .then((responseData) => {
-                            if (responseData.status) {
-                                localStorage.removeItem("token");
+                        .then((data) => {
+                            if (data.status) {
                                 this.isLogged = false;
                                 swal.fire({
                                     icon: "success",
                                     title: "¡Éxito!",
-                                    text: responseData.message,
+                                    text: data.message,
                                 }).then(() => {
                                     localStorage.clear();
-                                    window.location.href = '/';
+                                    this.$router.push({name: 'Home'});
                                 });
                             } else {
                                 swal.fire({
                                     icon: "error",
                                     title: "¡Error!",
-                                    text: responseData.message,
+                                    text: data.message,
                                 });
                             }
                         });

@@ -62,15 +62,17 @@
                     <li class="list-group-item">Correo electrónico: {{ user ? user.email : 'Cargando...' }}</li>
                     <li class="list-group-item">Teléfono: {{ user ? user.phone : 'Cargando...' }}</li>
                     <li class="list-group-item">Dirección: {{ user ? user.home_address : 'Cargando...' }}</li>
+                    <li class="list-group-item">Plan actual: {{ user ? subscription_type : 'Cargando...' }}</li>
                 </ul>
             </div>
             <div class="row d-flex justify-content-center mt-5">
-                <div class="card" style="width: 18rem;">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">An item</li>
-                        <li class="list-group-item">A second item</li>
-                        <li class="list-group-item">A third item</li>
-                    </ul>
+                <div class="col d-flex justify-content-center mt-3">
+                    <button class="btn btn-primary"
+                            id="btnActualizarPlan"
+                            v-if="subscription_type"
+                            @click="handleSwitchSubscription">
+                        {{ SubscriptionButtonText }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -91,6 +93,15 @@ export default {
             loading: true,
             isVerified: null,
             profile_photo: null,
+            subscription_type: '',
+        }
+    },
+    computed: {
+        SubscriptionButtonText() {
+            if(!this.subscription_type){
+                return 'Cargando...';
+            }
+            return this.subscription_type === 'Gratuito' ? 'Actualizar a Premium' : 'Cambiar a Gratuito';
         }
     },
     async mounted() {
@@ -104,6 +115,13 @@ export default {
             this.isVerified = this.user.verified;
             this.profile_photo = API_URL_IMAGE + '/' + this.user.profile_photo_path;
             await this.showAlertIsNotVerified();
+
+            if(!this.user.subscription_type){
+                this.subscription_type = 'Cargando...';
+                return;
+            }
+
+            this.user.subscription_type === 'paciente_gratis' ? this.subscription_type = 'Gratuito' : this.subscription_type = 'Premium';
         },
         async showAlertIsNotVerified() {
             if (!this.isVerified) {
@@ -123,7 +141,10 @@ export default {
                     }
                 });
             }
-        }
+        },
+        handleSwitchSubscription() {
+            this.$router.push({name: 'SubscriptionPlans'});
+        },
     },
 }
 </script>

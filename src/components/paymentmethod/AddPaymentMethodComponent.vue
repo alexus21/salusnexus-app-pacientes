@@ -5,12 +5,13 @@
         <div class="decorative-element decorative-element-2"></div>
         <div class="decorative-element decorative-element-3"></div>
 
-        <div v-if="isLoading" class="loading-container">
+<!--        <div v-if="isLoading" class="loading-container">
             <div class="spinner"></div>
             <p class="loading-text">Verificando tu suscripción...</p>
-        </div>
+        </div>-->
 
-        <div v-if="!isLoading && showPaymentForm" class="payment-container">
+<!--        <div v-if="!isLoading && showPaymentForm" class="payment-container">-->
+        <div class="payment-container">
             <!-- Panel izquierdo - Configuración de pago -->
             <div class="left-panel">
                 <h2 class="panel-title">Configuración</h2>
@@ -207,7 +208,7 @@ export default {
         }
     },
     async mounted() {
-        await this.fetchMySubscription();
+        // await this.fetchMySubscription();
     },
     computed: {
         getPaymentMethodIcon() {
@@ -215,48 +216,48 @@ export default {
         }
     },
     methods: {
-        async fetchMySubscription() {
-            this.isLoading = true;
-            try {
-                const response = await fetch(API_URL + '/subscriptions', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    },
-                });
-
-                const data = await response.json();
-                console.log(data);
-                this.isLoading = false;
-
-                // Ya está suscrito, mostrar alerta y redirigir a Home
-                if(data.status){
-                    swal.fire({
-                        icon: 'success',
-                        title: 'Ya estás suscrito',
-                        text: data.message,
-                    }).then(() => {
-                        this.showPaymentForm = false;
-                        this.goToHome();
-                    });
-                    return;
-                }
-
-                this.showPaymentForm = true;
-
-            } catch (error) {
-                this.isLoading = false;
-                console.error('Error fetching subscription:', error);
-                swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al verificar tu suscripción. Por favor, intenta nuevamente.',
-                }).then(() => {
-                    this.goToHome();
-                });
-            }
-        },
+        // async fetchMySubscription() {
+        //     this.isLoading = true;
+        //     try {
+        //         const response = await fetch(API_URL + '/subscriptions', {
+        //             method: 'GET',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        //             },
+        //         });
+        //
+        //         const data = await response.json();
+        //         console.log(data);
+        //         this.isLoading = false;
+        //
+        //         // Ya está suscrito, mostrar alerta y redirigir a Home
+        //         if(data.status){
+        //             swal.fire({
+        //                 icon: 'success',
+        //                 title: 'Ya estás suscrito',
+        //                 text: data.message,
+        //             }).then(() => {
+        //                 this.showPaymentForm = false;
+        //                 this.goToHome();
+        //             });
+        //             return;
+        //         }
+        //
+        //         this.showPaymentForm = true;
+        //
+        //     } catch (error) {
+        //         this.isLoading = false;
+        //         console.error('Error fetching subscription:', error);
+        //         swal.fire({
+        //             icon: 'error',
+        //             title: 'Error',
+        //             text: 'Ocurrió un error al verificar tu suscripción. Por favor, intenta nuevamente.',
+        //         }).then(() => {
+        //             this.goToHome();
+        //         });
+        //     }
+        // },
         goToHome() {
             this.$router.push({name: 'Home'});
         },
@@ -459,6 +460,15 @@ export default {
                     title: 'Éxito',
                     text: 'Método de pago agregado correctamente.',
                 }).then(() => {
+                    let user = JSON.parse(localStorage.getItem('user'));
+                    let period = localStorage.getItem('periodo');
+                    if (user) {
+                        user.subscription_type = 'paciente_avanzado';
+                        localStorage.setItem('user', JSON.stringify(user));
+
+                        user.subscription_period = period;
+                        localStorage.setItem('user', JSON.stringify(user));
+                    }
                     this.goToHome();
                 })
             } catch (error) {

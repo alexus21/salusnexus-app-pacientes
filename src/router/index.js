@@ -81,8 +81,8 @@ const routes = [
         },
     },
     {
-        path: '/plans/pacientes',
-        name: 'PatientsSubscriptionPlans',
+        path: '/planes/pacientes',
+        name: 'SubscriptionPlans',
         component: SubscriptionPlansComponent,
         meta: {
             hideHeader: true

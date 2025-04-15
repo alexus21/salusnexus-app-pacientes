@@ -43,7 +43,7 @@
                     />
                 </ul>
                 <button class="btn-action btn-action-dark mt-auto" @click="startFreePlan">
-                    Comenzar gratis
+                    {{ plan_info_free }}
                 </button>
                 <p class="plan-footer-text">No se requiere tarjeta de débito/crédito</p>
             </div>
@@ -68,7 +68,7 @@
                     />
                 </ul>
                 <button class="btn-action btn-action-primary mt-auto" @click="startProPlan">
-                    Comenzar prueba gratuita de 14 días
+                    {{ plan_info_pro }}
                 </button>
                 <p class="plan-footer-text">Se requiere tarjeta de débito/crédito</p>
             </div>
@@ -93,7 +93,7 @@
                     />
                 </ul>
                 <button class="btn-action btn-action-primary mt-auto" @click="startYearlyPlan">
-                    Comenzar prueba gratuita de 14 días
+                    {{ plan_info_yearly }}
                 </button>
                  <p class="plan-footer-text">Se requiere tarjeta de débito/crédito</p>
             </div>
@@ -143,7 +143,14 @@ export default {
                 'Recordatorios personalizados para ti'
             ],
             yearly: false,
+            subscription_period: '',
+            plan_info_free: 'Comenzar gratis',
+            plan_info_pro: 'Comenzar prueba gratuita de 14 días',
+            plan_info_yearly: 'Comenzar prueba gratuita de 14 días',
         }
+    },
+    mounted() {
+        this.handleButtonsMessages();
     },
     methods: {
         startFreePlan() {
@@ -156,6 +163,19 @@ export default {
         startProPlan() {
             localStorage.setItem('selected_plan', 'avanzado');
             localStorage.setItem('periodo', 'mensual');
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(user){
+                const subscriptionType = user.subscription_type;
+
+                if (subscriptionType) {
+                    this.$router.push({
+                        name: 'AddPaymentMethod',
+                    });
+                    return;
+                }
+            }
+
             this.$router.push({
                 name: 'Register',
             });
@@ -163,6 +183,19 @@ export default {
         startYearlyPlan() {
             localStorage.setItem('selected_plan', 'avanzado');
             localStorage.setItem('periodo', 'anual');
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(user){
+                const subscriptionType = user.subscription_type;
+
+                if (subscriptionType) {
+                    this.$router.push({
+                        name: 'AddPaymentMethod',
+                    });
+                    return;
+                }
+            }
+
             this.$router.push({
                 name: 'Register',
             });
@@ -172,7 +205,28 @@ export default {
         },
         showYearly() {
             this.yearly = true;
-        }
+        },
+        handleButtonsMessages() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(user){
+                const subscriptionType = user.subscription_type;
+                const subscriptionPeriod = user.subscription_period;
+
+                if (subscriptionPeriod === 'mensual') {
+                    this.plan_info_yearly = 'Suscribirse ahora';
+                } else {
+                    this.plan_info_yearly = 'Plan actual';
+                }
+
+                if (subscriptionType === 'paciente_gratis'){
+                    this.plan_info_free = 'Plan actual';
+                    this.plan_info_pro = 'Comenzar prueba gratuita de 14 días';
+                } else if (subscriptionType === 'paciente_avanzado') {
+                    this.plan_info_free = 'Cambiar a gratuito';
+                    this.plan_info_pro = 'Plan actual';
+                }
+            }
+        },
     }
 }
 
