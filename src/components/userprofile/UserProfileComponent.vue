@@ -11,61 +11,20 @@
                         }}</p>
                 </div>
                 <div class="col d-flex justify-content-center mt-3">
-                    <button class="btn btn-outline-light border border-black border-1 text-black" id="btnCancelar">
+                    <button class="btn btn-outline-light border border-black border-1 text-black" id="btnCancelar"
+                            @click="handleCancelEditProfile">
                         Cancelar
                     </button>
-                    <button class="btn btn-primary" id="btnEditar">Editar</button>
+                    <button class="btn btn-primary" id="btnEditar" @click="handleEditProfile">Editar</button>
                 </div>
             </div>
-            <div class="row d-flex justify-content-center mt-5 text-start">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">person </span>
-                        {{ user ? user.first_name + ' ' + user.last_name : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">email </span>
-                        {{ user ? user.email : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">phone </span>
-                        {{ user ? user.phone : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">home </span>
-                        {{ user ? user.home_address : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">emergency </span>
-                        {{ user ? user.emergency_contact_name : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">contact_emergency </span>
-                        {{ user ? user.emergency_contact_phone : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="material-icons text-primary me-3">calendar_month</span>
-                        {{
-                            user ? new Date(user.date_of_birth + 'T00:00:00Z').toLocaleDateString('es-ES', {timeZone: 'UTC'}) : 'Cargando...'
-                        }}
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <div class="row d-flex justify-content-center ms-5 text-start">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Nombre completo:
-                        {{ user ? user.first_name + ' ' + user.last_name : 'Cargando...' }}
-                    </li>
-                    <li class="list-group-item">Correo electrónico: {{ user ? user.email : 'Cargando...' }}</li>
-                    <li class="list-group-item">Teléfono: {{ user ? user.phone : 'Cargando...' }}</li>
-                    <li class="list-group-item">Dirección: {{ user ? user.home_address : 'Cargando...' }}</li>
-                    <li class="list-group-item">Plan actual: {{ user ? subscription_type : 'Cargando...' }}</li>
-                </ul>
-            </div>
             <div class="row d-flex justify-content-center mt-5">
+                <div class="col d-flex justify-content-center mt-3">
+                    <p>
+                        Plan actual: {{ user ? subscription_type : 'Cargando...' }}
+                    </p>
+                </div>
+
                 <div class="col d-flex justify-content-center mt-3">
                     <button class="btn btn-primary"
                             id="btnActualizarPlan"
@@ -74,6 +33,67 @@
                         {{ SubscriptionButtonText }}
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="row d-flex justify-content-center mt-5 text-start">
+                <h3>Información personal</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">person </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.first_name.split(' ')[0] + ' ' + user.last_name.split(' ')[0] : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">email </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.email : 'Cargando...'"
+                               readonly>
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">phone </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.phone : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">home </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.home_address : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">emergency </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.emergency_contact_name : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">contact_emergency </span>
+                        <input type="text"
+                               class="form-control w-50"
+                               :value="user ? user.emergency_contact_phone : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="material-icons text-primary me-3">calendar_month</span>
+                        <input type="date"
+                               class="form-control w-50"
+                               :value="user ? user.date_of_birth : 'Cargando...'"
+                               :readonly="readonly">
+                    </li>
+                </ul>
+            </div>
+            <div class="row d-flex justify-content-center mt-5 text-start">
+                <h3>Información de ubicación</h3>
+
             </div>
         </div>
     </div>
@@ -94,11 +114,12 @@ export default {
             isVerified: null,
             profile_photo: null,
             subscription_type: '',
+            readonly: true
         }
     },
     computed: {
         SubscriptionButtonText() {
-            if(!this.subscription_type){
+            if (!this.subscription_type) {
                 return 'Cargando...';
             }
             return this.subscription_type === 'Gratuito' ? 'Actualizar a Premium' : 'Cambiar a Gratuito';
@@ -116,7 +137,7 @@ export default {
             this.profile_photo = API_URL_IMAGE + '/' + this.user.profile_photo_path;
             await this.showAlertIsNotVerified();
 
-            if(!this.user.subscription_type){
+            if (!this.user.subscription_type) {
                 this.subscription_type = 'Cargando...';
                 return;
             }
@@ -145,6 +166,12 @@ export default {
         handleSwitchSubscription() {
             this.$router.push({name: 'SubscriptionPlans'});
         },
+        handleEditProfile() {
+            this.readonly = !this.readonly;
+        },
+        handleCancelEditProfile() {
+            this.readonly = !this.readonly;
+        }
     },
 }
 </script>
@@ -182,6 +209,21 @@ img {
     text-align: center;
     width: 200px;
     height: 50px;
+}
+
+input {
+    border: none;
+    border-bottom: #434ed1 solid 1px;
+    border-radius: 5px;
+}
+
+input:focus {
+    outline: none;
+    border-bottom: #434ed1 solid 2px;
+}
+
+.list-group-item {
+    border-bottom: none !important;
 }
 
 </style>
