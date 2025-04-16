@@ -57,9 +57,14 @@
         <!-- Contenido principal -->
         <div class="dashboard-content">
             <div class="dashboard-header">
-                <h1 class="welcome-title">¡{{(user && user.gender === 'masculino') ? 'Bienvenido' : 'Bienvenida'}}, {{user && user.first_name && user.last_name ? (partialName + '!') : 'Cargando...'}}</h1>
-                <p class="welcome-subtitle">Aquí tienes pacientes potenciales cercanos a tu ubicación que coinciden con
-                    tu especialidad en Cardiología</p>
+                <h1 class="welcome-title">
+                    ¡{{(user && user.gender === 'masculino') ? 'Bienvenido' : 'Bienvenida'}},
+                    {{user && user.first_name && user.last_name ? (partialName + '!') : 'Cargando...'}}
+                </h1>
+                <p class="welcome-subtitle">
+                    Aquí tienes pacientes potenciales cercanos a tu ubicación que coinciden con
+                    tu especialidad en Cardiología
+                </p>
             </div>
 
             <div class="stats-cards">
