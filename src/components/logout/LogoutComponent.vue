@@ -24,8 +24,8 @@ export default {
                 showCancelButton: true,
                 confirmButtonText: "Sí, cerrar sesión",
                 cancelButtonText: "Cancelar",
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
+                confirmButtonColor: "#434ed1",
+                cancelButtonColor: "#d1434e",
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch(API_URL + "/logout", {
@@ -36,22 +36,16 @@ export default {
                         },
                     })
                         .then((response) => response.json())
-                        .then((data) => {
-                            if (data.status) {
+                        .then((responseData) => {
+                            if (responseData.status) {
+                                localStorage.clear();
                                 this.isLogged = false;
-                                swal.fire({
-                                    icon: "success",
-                                    title: "¡Éxito!",
-                                    text: data.message,
-                                }).then(() => {
-                                    localStorage.clear();
-                                    this.$router.push({name: 'Home'});
-                                });
+                                window.location.reload();
                             } else {
                                 swal.fire({
                                     icon: "error",
                                     title: "¡Error!",
-                                    text: data.message,
+                                    text: responseData.message,
                                 });
                             }
                         });

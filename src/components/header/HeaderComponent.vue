@@ -107,6 +107,17 @@ const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
     name: 'HeaderComponent',
+    data() {
+        return {
+            showRegisterComponent: false,
+            showLoginComponent: false,
+            show: false,
+            isLogged: false,
+        }
+    },
+    async mounted() {
+        this.isLogged = await validateAuth();
+    },
     methods: {
         handleRegisterClick() {
             this.$router.push({name: 'Register'});
@@ -158,17 +169,6 @@ export default {
             })
         },
     },
-    data() {
-        return {
-            showRegisterComponent: false,
-            showLoginComponent: false,
-            show: false,
-            isLogged: false,
-        }
-    },
-    async mounted() {
-        this.isLogged = await validateAuth();
-    }
 };
 </script>
 
