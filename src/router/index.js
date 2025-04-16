@@ -10,6 +10,14 @@ import AddPaymentMethodComponent from "@/components/paymentmethod/AddPaymentMeth
 import {validateAuth} from "@/utils/auth";
 import VerifyAccountComponent from "@/components/verifyaccount/VerifyAccountComponent.vue";
 import UserProfileComponent from "@/components/userprofile/UserProfileComponent.vue";
+import PatientSettingsLayout from "@/components/userprofile/userprofiletest/PatientSettingsLayout.vue";
+import ProfileSection from "@/components/userprofile/userprofiletest/ProfileSection.vue";
+import SubscriptionSection from "@/components/userprofile/userprofiletest/SubscriptionSection.vue";
+import SecuritySection from "@/components/userprofile/userprofiletest/SecuritySection.vue";
+
+// Placeholder components - create these files later
+const PatientNotificationsSection = { template: '<div><h2>Notificaciones</h2><p>Contenido de Notificaciones...</p></div>' };
+const PatientConfigurationSection = { template: '<div><h2>Configuración</h2><p>Contenido de Configuración...</p></div>' };
 
 const routes = [
     {
@@ -87,6 +95,42 @@ const routes = [
         meta: {
             hideHeader: true
         }
+    },
+    {
+        path: '/paciente/configuracion',
+        component: PatientSettingsLayout,
+        meta: { requiresAuth: false, hideHeader: true },
+        children: [
+            {
+                path: '',
+                redirect: 'perfil'
+            },
+            {
+                path: 'perfil',
+                name: 'PatientProfile',
+                component: ProfileSection
+            },
+            {
+                path: 'suscripcion',
+                name: 'PatientSubscription',
+                component: SubscriptionSection
+            },
+            {
+                path: 'seguridad',
+                name: 'PatientSecurity',
+                component: SecuritySection
+            },
+            {
+                path: 'notificaciones',
+                name: 'PatientNotifications',
+                component: PatientNotificationsSection
+            },
+            {
+                path: 'configuracion',
+                name: 'PatientConfiguration',
+                component: PatientConfigurationSection
+            }
+        ]
     },
     {
         path: '/:pathMatch(.*)*',
