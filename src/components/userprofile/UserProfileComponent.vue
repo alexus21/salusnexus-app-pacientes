@@ -57,6 +57,7 @@ import MySubscriptionComponent from "@/components/userprofile/subcomponents/MySu
 import LogoutComponent from "@/components/logout/LogoutComponent.vue";
 import SecurityComponent from "@/components/userprofile/subcomponents/SecurityComponent.vue";
 
+const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
@@ -111,7 +112,32 @@ export default {
         ...LogoutComponent.methods,
         async loadUserData() {
             try {
-                this.user = JSON.parse(localStorage.getItem('user'));
+
+                if(!localStorage.getItem('token')) return this.$router.push({name: 'Login'});
+
+                const response = await fetch(`${API_URL}/userprofile`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (error.message === 'Token has expired') {
+                        this.logout();
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+                if (!data.status) {
+                    return;
+                }
+
+                this.user = data.data;
+                localStorage.setItem('user', JSON.stringify(data.data)); // <- Guardar en localStore para usarlo en otras vistas
 
                 // Simulate loading delay
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -186,7 +212,7 @@ export default {
 .profile-photo {
     border-radius: 50%;
     width: 150px;
-    height: 125px;
+    height: 150px;
     object-fit: cover;
 }
 
