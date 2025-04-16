@@ -1,5 +1,11 @@
 <template>
     <div class="row">
+        <div class="row main-top-bar">
+            <p class="fw-bold mt-3 d-flex justify-content-start">Mi Perfil</p>
+            <p class="fw-light d-flex justify-content-start">Gestionar tu información personal</p>
+        </div>
+    </div>
+    <div class="row">
         <div class="row d-flex justify-content-center mt-3 text-start">
             <h3>Información personal</h3>
         </div>
@@ -117,6 +123,13 @@ export default {
 </script>
 
 <style scoped>
+.main-top-bar{
+    background-color: #0a2d5e;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+}
+
 .list-group-item {
     border: 1px #efefef solid;
     border-radius: 10px;

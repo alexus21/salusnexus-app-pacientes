@@ -27,11 +27,11 @@
             </div>
             <hr/>
             <div class="row">
-                <button class="sidebar-buttons">
+                <button class="sidebar-buttons" @click="handleMyProfile">
                     <i class="fa-solid fa-user me-2"></i>
                     Mi Perfil
                 </button>
-                <button class="sidebar-buttons">
+                <button class="sidebar-buttons" @click="handleMySubscription">
                     <i class="fa-solid fa-credit-card me-2"></i>
                     Mi Suscripción</button>
                 <button class="sidebar-buttons">
@@ -48,14 +48,9 @@
                 </button>
             </div>
         </div>
-        <div class="col-md-auto">
-            <div class="row">
-                <div class="row main-top-bar">
-                    <p class="fw-bold mt-3 d-flex justify-content-start">Mi perfil</p>
-                    <p class="fw-light d-flex justify-content-start">Gestionar tu información personal</p>
-                </div>
-            </div>
-            <MyProfileComponent :user="user" :readonly="readonly" />
+        <div class="col-md-9">
+            <MyProfileComponent :user="user" :readonly="readonly" v-if="showMyProfile"/>
+            <MySubscriptionComponent v-if="showMySubscription" />
         </div>
     </div>
 </template>
@@ -63,13 +58,14 @@
 <script>
 import swal from "sweetalert2";
 import MyProfileComponent from "@/components/userprofile/subcomponents/MyProfileComponent.vue";
+import MySubscriptionComponent from "@/components/userprofile/subcomponents/MySubscription.vue";
 
 // const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'UserProfileComponent',
-    components: {MyProfileComponent},
+    components: {MySubscriptionComponent, MyProfileComponent},
     data() {
         return {
             user: null,
@@ -77,7 +73,11 @@ export default {
             isVerified: null,
             profile_photo: null,
             subscription_type: '',
-            readonly: true
+            readonly: true,
+
+            //----------------------
+            showMyProfile: true,
+            showMySubscription: false,
         }
     },
     computed: {
@@ -134,7 +134,15 @@ export default {
         },
         handleCancelEditProfile() {
             this.readonly = !this.readonly;
-        }
+        },
+        handleMyProfile() {
+            this.showMyProfile = true;
+            this.showMySubscription = false;
+        },
+        handleMySubscription() {
+            this.showMyProfile = false;
+            this.showMySubscription = true;
+        },
     },
 }
 </script>
@@ -202,13 +210,6 @@ input:focus {
     background-color: #4f5bf7;
     color: #ffffff;
     font-weight: bold;
-}
-
-.main-top-bar{
-    background-color: #0a2d5e;
-    width: 75vw;
-    display: flex;
-    justify-content: flex-start;
 }
 
 </style>
