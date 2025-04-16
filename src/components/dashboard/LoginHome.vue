@@ -57,7 +57,7 @@
         <!-- Contenido principal -->
         <div class="dashboard-content">
             <div class="dashboard-header">
-                <h1 class="welcome-title">¡Bienvenido, {{user && user.first_name && user.last_name ? (partialName + '!') : 'Cargando...'}}</h1>
+                <h1 class="welcome-title">¡{{(user && user.gender === 'masculino') ? 'Bienvenido' : 'Bienvenida'}}, {{user && user.first_name && user.last_name ? (partialName + '!') : 'Cargando...'}}</h1>
                 <p class="welcome-subtitle">Aquí tienes pacientes potenciales cercanos a tu ubicación que coinciden con
                     tu especialidad en Cardiología</p>
             </div>
@@ -270,7 +270,8 @@ export default {
             user: null,
             fullName: null,
             partialName: null,
-            profilePicImage: null
+            profilePicImage: null,
+            welcomeMessage: ''
         }
     },
     mounted() {
