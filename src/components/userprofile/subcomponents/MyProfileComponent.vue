@@ -1,5 +1,5 @@
 <template>
-    <div class="row">
+    <div class="col">
         <div class="row main-top-bar">
             <p class="fw-bold mt-3 d-flex justify-content-start">Mi Perfil</p>
             <p class="fw-light d-flex justify-content-start">Gestionar tu información personal</p>
@@ -82,24 +82,22 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="row d-flex justify-content-center mt-3 text-start">
-                <h3>Contacto de emergencia</h3>
-                <hr class="mt-3" />
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex align-items-center">
-                        <div class="icon-container" id="emergency-contact-container"><i class="fa-solid fa-heart"></i></div>
-                        <div>
-                            <p class="text-secondary">Contacto de emergencia</p>
-                            <input type="text"
-                                   class="form-control"
-                                   :value="user ? user.emergency_contact_name + ' - ' + user.emergency_contact_phone : 'Cargando...'"
-                                   readonly>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+    <div class="col-6">
+        <div class="row d-flex justify-content-center mt-3 text-start">
+            <h3>Contacto de emergencia</h3>
+            <hr class="mt-3" />
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex align-items-center">
+                    <div class="icon-container" id="emergency-contact-container"><i class="fa-solid fa-heart"></i></div>
+                    <div>
+                        <p class="text-secondary">Contacto de emergencia</p>
+                        <input type="text"
+                               class="form-control"
+                               :value="user ? user.emergency_contact_name + ' - ' + user.emergency_contact_phone : 'Cargando...'"
+                               readonly>
+                    </div>
+                </li>
+            </ul>
         </div>
     </div>
 </template>

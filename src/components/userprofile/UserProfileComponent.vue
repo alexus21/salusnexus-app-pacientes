@@ -1,194 +1,192 @@
 <template>
     <div class="row">
+        <!-- Sidebar -->
         <div class="col-md-3">
-            <div class="row">
-                <div class="row d-flex justify-content-center">
-                    <div class="row d-flex justify-content-center">
-                        <img :src="profile_photo" alt="profile picture" class="img-fluid">
-                    </div>
-                    <div class="row d-flex justify-content-center mt-3">
-                        <p class="fw-bold">{{
-                                user ? user.first_name.split(' ')[0] + ' ' + user.last_name.split(' ')[0] : 'Cargando...'
-                            }}</p>
-                    </div>
-                    <div class="row d-flex justify-content-center">
-                        <p class="text-secondary">{{
-                                user ? user.email : 'Cargando...'
-                            }}</p>
-                    </div>
-                    <div class="row d-flex justify-content-center mt-3">
-                        <button class="edit-profile-button"
-                                id="btnEditar"
-                                @click="handleEditProfile">
-                            Editar
-                        </button>
-                    </div>
-                </div>
+            <!-- User Profile Card -->
+            <div class="profile-card mt-3 text-center">
+                <img :src="profile_photo" :alt="`${user?.first_name || ''} profile picture`" class="profile-photo">
+                <p class="fw-bold mt-3">{{ userFullName }}</p>
+                <p class="text-secondary">{{ user?.email || 'Cargando...' }}</p>
+                <button
+                        class="edit-profile-button"
+                        @click="toggleEditMode"
+                >
+                    {{ readonly ? 'Editar' : 'Cancelar' }}
+                </button>
             </div>
+
             <hr/>
-            <div class="row">
-                <button class="sidebar-buttons" @click="handleMyProfile">
-                    <i class="fa-solid fa-user me-2"></i>
-                    Mi Perfil
+
+            <!-- Navigation Menu -->
+            <nav class="sidebar-menu">
+                <button
+                        v-for="(item, index) in menuItems"
+                        :key="index"
+                        class="sidebar-button"
+                        :class="{ active: activeSection === item.section }"
+                        @click="setActiveSection(item.section)"
+                >
+                    <i :class="item.icon + ' me-2'"></i>
+                    {{ item.label }}
                 </button>
-                <button class="sidebar-buttons" @click="handleMySubscription">
-                    <i class="fa-solid fa-credit-card me-2"></i>
-                    Mi Suscripción</button>
-                <button class="sidebar-buttons">
-                    <i class="fa-solid fa-shield me-2"></i>
-                    Seguridad
-                </button>
-                <button class="sidebar-buttons">
-                    <i class="fa-solid fa-bell me-2"></i>
-                    Notificaciones
-                </button>
-                <button class="sidebar-buttons">
-                    <i class="fa-solid fa-gear me-2"></i>
-                    Configuración
-                </button>
-            </div>
+            </nav>
         </div>
+
+        <!-- Main Content Area -->
         <div class="col-md-9">
-            <MyProfileComponent :user="user" :readonly="readonly" v-if="showMyProfile"/>
-            <MySubscriptionComponent v-if="showMySubscription" />
+            <component
+                    :is="activeComponent"
+                    :user="user"
+                    :readonly="readonly"
+            />
         </div>
     </div>
 </template>
 
 <script>
-import swal from "sweetalert2";
+import Swal from "sweetalert2";
 import MyProfileComponent from "@/components/userprofile/subcomponents/MyProfileComponent.vue";
 import MySubscriptionComponent from "@/components/userprofile/subcomponents/MySubscription.vue";
 
-// const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'UserProfileComponent',
-    components: {MySubscriptionComponent, MyProfileComponent},
+    components: {
+        MyProfileComponent,
+        MySubscriptionComponent
+    },
+
     data() {
         return {
             user: null,
-            loading: true,
-            isVerified: null,
             profile_photo: null,
             subscription_type: '',
             readonly: true,
+            activeSection: 'profile',
+            menuItems: [
+                { section: 'profile', label: 'Mi Perfil', icon: 'fa-solid fa-user', component: 'MyProfileComponent' },
+                { section: 'subscription', label: 'Mi Suscripción', icon: 'fa-solid fa-credit-card', component: 'MySubscriptionComponent' },
+                { section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: null },
+                { section: 'notifications', label: 'Notificaciones', icon: 'fa-solid fa-bell', component: null },
+                { section: 'settings', label: 'Configuración', icon: 'fa-solid fa-gear', component: null }
+            ]
+        };
+    },
 
-            //----------------------
-            showMyProfile: true,
-            showMySubscription: false,
-        }
-    },
     computed: {
-        SubscriptionButtonText() {
-            if (!this.subscription_type) {
-                return 'Cargando...';
-            }
-            return this.subscription_type === 'Gratuito' ? 'Actualizar a Premium' : 'Cambiar a Gratuito';
+        userFullName() {
+            if (!this.user) return 'Cargando...';
+            const firstName = this.user.first_name.split(' ')[0];
+            const lastName = this.user.last_name.split(' ')[0];
+            return `${firstName} ${lastName}`;
+        },
+
+        activeComponent() {
+            const activeMenuItem = this.menuItems.find(item => item.section === this.activeSection);
+            return activeMenuItem?.component || null;
+        },
+
+        isVerified() {
+            return this.user?.verified || false;
         }
     },
+
     async mounted() {
         await this.loadUserData();
     },
+
     methods: {
         async loadUserData() {
-            this.user = JSON.parse(localStorage.getItem('user'));
-            //Esperar un segundo para simular la carga de datos
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            this.isVerified = this.user.verified;
-            this.profile_photo = API_URL_IMAGE + '/' + this.user.profile_photo_path;
-            await this.showAlertIsNotVerified();
+            try {
+                this.user = JSON.parse(localStorage.getItem('user'));
 
+                // Simulate loading delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                if (this.user) {
+                    this.profile_photo = `${API_URL_IMAGE}/${this.user.profile_photo_path}`;
+                    this.setSubscriptionType();
+                    this.checkVerificationStatus();
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        },
+
+        setSubscriptionType() {
             if (!this.user.subscription_type) {
                 this.subscription_type = 'Cargando...';
                 return;
             }
 
-            this.user.subscription_type === 'paciente_gratis' ? this.subscription_type = 'Gratuito' : this.subscription_type = 'Premium';
+            this.subscription_type = this.user.subscription_type === 'paciente_gratis'
+                ? 'Gratuito'
+                : 'Premium';
         },
-        async showAlertIsNotVerified() {
+
+        async checkVerificationStatus() {
             if (!this.isVerified) {
-                swal.fire({
-                    icon: 'warning',
-                    iconColor: '#D69656',
-                    title: '¡Atención!',
-                    text: 'Tu cuenta no está verificada. Por favor verifica tu cuenta para acceder a todas las funciones.',
-                    confirmButtonText: 'Verificar',
-                    confirmButtonColor: '#5660d6',
-                    cancelButtonText: 'Cancelar',
-                    allowEscapeKey: false,
-                    allowOutsideClick: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.$router.push({name: 'VerifyPatientAccount'});
-                    }
-                });
+                await this.showVerificationAlert();
             }
         },
-        handleSwitchSubscription() {
-            this.$router.push({name: 'SubscriptionPlans'});
+
+        async showVerificationAlert() {
+            const result = await Swal.fire({
+                icon: 'warning',
+                iconColor: '#D69656',
+                title: '¡Atención!',
+                text: 'Tu cuenta no está verificada. Por favor verifica tu cuenta para acceder a todas las funciones.',
+                confirmButtonText: 'Verificar',
+                confirmButtonColor: '#5660d6',
+                cancelButtonText: 'Cancelar',
+                showCancelButton: true,
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+            });
+
+            if (result.isConfirmed) {
+                this.$router.push({ name: 'VerifyPatientAccount' });
+            }
         },
-        handleEditProfile() {
+
+        toggleEditMode() {
             this.readonly = !this.readonly;
         },
-        handleCancelEditProfile() {
-            this.readonly = !this.readonly;
+
+        setActiveSection(section) {
+            this.activeSection = section;
         },
-        handleMyProfile() {
-            this.showMyProfile = true;
-            this.showMySubscription = false;
-        },
-        handleMySubscription() {
-            this.showMyProfile = false;
-            this.showMySubscription = true;
-        },
-    },
-}
+
+        navigateToSubscriptionPlans() {
+            this.$router.push({ name: 'SubscriptionPlans' });
+        }
+    }
+};
 </script>
 
 <style scoped>
-img {
+.profile-photo {
     border-radius: 50%;
     width: 150px;
     height: 125px;
     object-fit: cover;
 }
 
-.p-name {
-    font-size: 15px;
-    font-weight: bold;
-    font-family: 'Arial Black', sans-serif, 'Comic Sans MS', cursive;
-}
-
-#btnCancelar {
+.profile-card {
     display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    text-align: center;
-    width: 200px;
-    height: 50px;
 }
 
-input {
-    border: none;
-    border-bottom: #434ed1 solid 1px;
-    border-radius: 5px;
-}
-
-input:focus {
-    outline: none;
-    border-bottom: #434ed1 solid 2px;
-}
-
-.edit-profile-button{
+.edit-profile-button {
     background-color: #f0f7ff;
     color: #4f5bf7;
     border: #4f5bf7 solid 1px;
     border-radius: 5px;
     width: 200px;
     height: 35px;
+    transition: all 0.3s ease;
 }
 
 .edit-profile-button:hover {
@@ -197,19 +195,37 @@ input:focus {
     font-weight: bold;
 }
 
-.sidebar-buttons {
+.sidebar-button {
     background-color: #f0f7ff;
     color: #6275f0;
     border: 0;
     height: 50px;
     text-align: start;
     padding-left: 10%;
+    width: 100%;
+    transition: all 0.3s ease;
 }
 
-.sidebar-buttons:hover {
+.sidebar-button:hover, .sidebar-button.active {
     background-color: #4f5bf7;
     color: #ffffff;
     font-weight: bold;
 }
 
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    border: none;
+    border-bottom: #434ed1 solid 1px;
+    border-radius: 5px;
+    transition: border-bottom 0.3s ease;
+}
+
+input:focus {
+    outline: none;
+    border-bottom: #434ed1 solid 2px;
+}
 </style>
