@@ -70,7 +70,7 @@
                 <button class="btn-action btn-action-primary mt-auto" @click="startProPlan">
                     {{ plan_info_pro }}
                 </button>
-                <p class="plan-footer-text">Se requiere tarjeta de débito/crédito</p>
+                <p class="plan-footer-text" v-if="showThis">Se requiere tarjeta de débito/crédito</p>
             </div>
 
             <!-- Advanced Plan (Yearly) -->
@@ -95,12 +95,12 @@
                 <button class="btn-action btn-action-primary mt-auto" @click="startYearlyPlan">
                     {{ plan_info_yearly }}
                 </button>
-                 <p class="plan-footer-text">Se requiere tarjeta de débito/crédito</p>
+                 <p class="plan-footer-text" v-if="showThis">Se requiere tarjeta de débito/crédito</p>
             </div>
         </div>
 
         <!-- Payment Methods -->
-        <div class="payment-methods-section">
+        <div class="payment-methods-section" v-if="showThis">
             <p class="payment-methods-title">Métodos de pago</p>
             <div class="payment-icons">
                 <img src="/visa.png" alt="Visa" class="payment-icon">
@@ -119,9 +119,15 @@
 import SubscriptionFeatureItem from '@/components/subscriptionplan/SubscriptionFeatureItem.vue';
 
 export default {
-    name: 'PatientSubscriptionPlansComponent',
+    name: 'SubscriptionPlansComponent',
     components: {
         SubscriptionFeatureItem
+    },
+    props: {
+        showThis: {
+            type: Boolean,
+            default: true
+        }
     },
     data() {
         return {

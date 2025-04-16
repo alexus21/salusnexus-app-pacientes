@@ -7,7 +7,7 @@
     </div>
     <div class="row">
         <div class="row d-flex justify-content-center mt-3 text-start">
-            <h3>Información personal</h3>
+            <h5 class="fw-bold">Información personal</h5>
         </div>
         <div class="col-md-6">
             <div class="row d-flex justify-content-center mt-3 text-start">
@@ -84,7 +84,7 @@
     </div>
     <div class="col-6">
         <div class="row d-flex justify-content-center mt-3 text-start">
-            <h3>Contacto de emergencia</h3>
+            <h5 class="fw-bold">Contacto de emergencia</h5>
             <hr class="mt-3" />
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex align-items-center">
