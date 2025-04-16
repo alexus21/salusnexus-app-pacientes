@@ -29,6 +29,13 @@
                     <i :class="item.icon + ' me-2'"></i>
                     {{ item.label }}
                 </button>
+
+                <hr style="margin-top: 40%"/>
+                <button
+                        class="btn sidebar-button-logout" @click="logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Cerrar sesión
+                </button>
             </nav>
         </div>
 
@@ -47,6 +54,7 @@
 import Swal from "sweetalert2";
 import MyProfileComponent from "@/components/userprofile/subcomponents/MyProfileComponent.vue";
 import MySubscriptionComponent from "@/components/userprofile/subcomponents/MySubscription.vue";
+import LogoutComponent from "@/components/logout/LogoutComponent.vue";
 
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
@@ -54,7 +62,8 @@ export default {
     name: 'UserProfileComponent',
     components: {
         MyProfileComponent,
-        MySubscriptionComponent
+        MySubscriptionComponent,
+        LogoutComponent,
     },
 
     data() {
@@ -65,11 +74,16 @@ export default {
             readonly: true,
             activeSection: 'profile',
             menuItems: [
-                { section: 'profile', label: 'Mi Perfil', icon: 'fa-solid fa-user', component: 'MyProfileComponent' },
-                { section: 'subscription', label: 'Mi Suscripción', icon: 'fa-solid fa-credit-card', component: 'MySubscriptionComponent' },
-                { section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: null },
-                { section: 'notifications', label: 'Notificaciones', icon: 'fa-solid fa-bell', component: null },
-                { section: 'settings', label: 'Configuración', icon: 'fa-solid fa-gear', component: null }
+                {section: 'profile', label: 'Mi Perfil', icon: 'fa-solid fa-user', component: 'MyProfileComponent'},
+                {
+                    section: 'subscription',
+                    label: 'Mi Suscripción',
+                    icon: 'fa-solid fa-credit-card',
+                    component: 'MySubscriptionComponent'
+                },
+                {section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: null},
+                {section: 'notifications', label: 'Notificaciones', icon: 'fa-solid fa-bell', component: null},
+                {section: 'settings', label: 'Configuración', icon: 'fa-solid fa-gear', component: null}
             ]
         };
     },
@@ -97,6 +111,7 @@ export default {
     },
 
     methods: {
+        ...LogoutComponent.methods,
         async loadUserData() {
             try {
                 this.user = JSON.parse(localStorage.getItem('user'));
@@ -107,7 +122,7 @@ export default {
                 if (this.user) {
                     this.profile_photo = `${API_URL_IMAGE}/${this.user.profile_photo_path}`;
                     this.setSubscriptionType();
-                    this.checkVerificationStatus();
+                    await this.checkVerificationStatus();
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
@@ -146,7 +161,7 @@ export default {
             });
 
             if (result.isConfirmed) {
-                this.$router.push({ name: 'VerifyPatientAccount' });
+                this.$router.push({name: 'VerifyPatientAccount'});
             }
         },
 
@@ -159,7 +174,7 @@ export default {
         },
 
         navigateToSubscriptionPlans() {
-            this.$router.push({ name: 'SubscriptionPlans' });
+            this.$router.push({name: 'SubscriptionPlans'});
         }
     }
 };
@@ -186,8 +201,8 @@ export default {
 
 .edit-profile-button {
     background-color: #f0f7ff;
-    color: #4f5bf7;
-    border: #4f5bf7 solid 1px;
+    color: #0c8ce3;
+    border: #0c8ce3 solid 1px;
     border-radius: 5px;
     width: 200px;
     height: 35px;
@@ -195,14 +210,14 @@ export default {
 }
 
 .edit-profile-button:hover {
-    background-color: #4f5bf7;
+    background-color: #0c8ce3;
     color: #ffffff;
     font-weight: bold;
 }
 
 .sidebar-button {
     background-color: #f0f7ff;
-    color: #6275f0;
+    color: #0c8ce3;
     border: 0;
     height: 50px;
     text-align: start;
@@ -212,7 +227,24 @@ export default {
 }
 
 .sidebar-button:hover, .sidebar-button.active {
-    background-color: #4f5bf7;
+    background-color: #0c8ce3;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.sidebar-button-logout {
+    background-color: #f0f7ff;
+    color: #bd635b;
+    border: 0;
+    height: 50px;
+    text-align: start;
+    padding-left: 10%;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.sidebar-button-logout:hover, .sidebar-button-logout.active {
+    background-color: #bd635b;
     color: #ffffff;
     font-weight: bold;
 }
