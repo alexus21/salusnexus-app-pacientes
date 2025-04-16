@@ -1,8 +1,8 @@
 <template>
     <div class="row">
         <div class="row main-top-bar">
-            <p class="fw-bold mt-3 d-flex justify-content-start">Mi Suscripción</p>
-            <p class="fw-light d-flex justify-content-start">Administra tu plan y beneficios</p>
+            <p class="fw-bold mt-3 d-flex justify-content-start text-white">Mi Suscripción</p>
+            <p class="fw-light d-flex justify-content-start text-white">Administra tu plan y beneficios</p>
         </div>
     </div>
 </template>
@@ -27,7 +27,7 @@ export default {
 
 <style scoped>
 .main-top-bar{
-    background-color: #0a2d5e;
+    background-color: #0c8ce3;
     width: 100%;
     display: flex;
     justify-content: flex-start;

@@ -1,8 +1,8 @@
 <template>
     <div class="col">
         <div class="row main-top-bar">
-            <p class="fw-bold mt-3 d-flex justify-content-start">Mi Perfil</p>
-            <p class="fw-light d-flex justify-content-start">Gestionar tu información personal</p>
+            <p class="fw-bold mt-3 d-flex justify-content-start text-white">Mi Perfil</p>
+            <p class="fw-light d-flex justify-content-start text-white">Gestionar tu información personal</p>
         </div>
     </div>
     <div class="row">
@@ -122,7 +122,7 @@ export default {
 
 <style scoped>
 .main-top-bar{
-    background-color: #0a2d5e;
+    background-color: #0c8ce3;
     width: 100%;
     display: flex;
     justify-content: flex-start;

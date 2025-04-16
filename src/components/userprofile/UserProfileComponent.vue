@@ -166,6 +166,11 @@ export default {
 </script>
 
 <style scoped>
+.row {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .profile-photo {
     border-radius: 50%;
     width: 150px;
