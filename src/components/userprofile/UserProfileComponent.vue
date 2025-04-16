@@ -264,7 +264,7 @@ input:focus {
 .fixed-sidebar {
     position: fixed;
     left: 0;
-    top: 0;
+    top: 9%;
     height: 100vh;
     overflow-y: auto;
     padding: 15px;
