@@ -32,8 +32,8 @@
                     <i class="fa solid fa-credit-card"></i>
                 </div>
                 <div class="ms-3">
-                    <p>Visa terminada en: ####</p>
-                    <p>Próximo cobro en un mes</p>
+                    <p>Visa terminada en: {{user.card_number}}</p>
+                    <p>Próximo cobro: {{user.end_date}}</p>
                 </div>
             </div>
         </div>
