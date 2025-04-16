@@ -111,7 +111,7 @@
 
             <div class="potential-patients-section">
                 <div class="section-header">
-                    <h2>Pacientes Potenciales</h2>
+                    <h2>Doctores y clinicas disponibles en tu área</h2>
                     <div class="filter-buttons">
                         <button
                             class="filter-btn"
@@ -140,30 +140,30 @@
                 </div>
 
                 <div v-else class="patients-grid">
-                    <div v-for="patient in patients" :key="patient.id" class="patient-card">
+                    <div v-for="clinic in clinics" :key="clinic.id" class="patient-card">
                         <div class="patient-avatar">
-                            <img :src="patient.avatar || 'https://via.placeholder.com/50'" alt="Avatar"/>
+                            <img :src="API_IMAGES_URL + clinic.facade_photo" alt="Avatar"/>
                         </div>
                         <div class="patient-info">
-                            <h3 class="patient-name">{{ patient.name }}</h3>
-                            <p class="patient-age">{{ patient.age }} años</p>
+                            <h3 class="patient-name">{{ clinic.clinic_name }}</h3>
+<!--                            <p class="patient-age">{{ clinic.age }} años</p>-->
                             <div class="patient-symptoms">
-                                <i class="fas fa-file-medical"></i> {{ patient.symptoms }}
+                                <i class="fas fa-file-medical"></i> Dr. {{ clinic.first_name + ' ' + clinic.last_name }}
                             </div>
                             <div class="patient-specialty">
-                                <i class="fas fa-heartbeat"></i> {{ patient.specialty }}
+                                <i class="fas fa-heartbeat"></i> {{ clinic.speciality_type.charAt(0).toUpperCase() + clinic.speciality_type.slice(1) }}
                             </div>
                             <div class="patient-location">
-                                <i class="fas fa-map-marker-alt"></i> {{ patient.location }}
-                                <span class="distance">A {{ patient.distance }} km de tu consultorio</span>
+                                <i class="fas fa-map-marker-alt"></i> {{ clinic.address_reference }}
+                                <span class="distance">A {{ clinic.distance }} km de tu consultorio</span>
                             </div>
                         </div>
                         <div class="patient-actions">
                             <button class="view-profile-btn">Ver Perfil</button>
                             <button class="contact-btn">Contactar</button>
                         </div>
-                        <div v-if="patient.status" class="patient-status" :class="patient.statusClass">
-                            {{ patient.status }}
+                        <div v-if="clinic.status" class="patient-status" :class="clinic.statusClass">
+                            {{ clinic.status }}
                         </div>
                     </div>
                 </div>
@@ -215,6 +215,7 @@
 <script>
 
 const API_IMAGES_URL = process.env.VUE_APP_API_URL_IMAGE;
+const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
     name: 'LoginHome',
@@ -276,7 +277,9 @@ export default {
             fullName: null,
             partialName: null,
             profilePicImage: null,
-            welcomeMessage: ''
+            welcomeMessage: '',
+            clinics: null,
+            API_IMAGES_URL: API_IMAGES_URL + '/',
         }
     },
     mounted() {
@@ -287,8 +290,38 @@ export default {
         this.fullName = this.getFullName();
         this.partialName = this.getPartialNme();
         this.setProfilePic();
+        this.fetchClinics();
     },
     methods: {
+        async fetchClinics(){
+            try {
+                const response = await fetch(API_URL + '/medical-clinics/view', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (error.message === 'Token has expired') {
+                        this.logout();
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+                if (!data.status) {
+                    return;
+                }
+
+                this.clinics = data.data;
+                console.log(this.clinics);
+            } catch (error) {
+                console.log(error);
+            }
+        },
         getFullName() {
             if (this.user && this.user.first_name && this.user.last_name) {
                 return `${this.user.first_name} ${this.user.last_name}`;
