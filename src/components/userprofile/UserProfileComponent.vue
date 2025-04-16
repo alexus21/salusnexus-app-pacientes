@@ -112,9 +112,6 @@ export default {
         ...LogoutComponent.methods,
         async loadUserData() {
             try {
-
-                if(!localStorage.getItem('token')) return this.$router.push({name: 'Login'});
-
                 const response = await fetch(`${API_URL}/userprofile`, {
                     method: 'GET',
                     headers: {
