@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="row">
                 <div class="row d-flex justify-content-center">
                     <div class="row d-flex justify-content-center">
@@ -49,103 +49,27 @@
             </div>
         </div>
         <div class="col-md-auto">
-            <div class="row m-5">
-                <!--            <div class="col-md-4">
-																<div class="row d-flex justify-content-center mt-5">
-																		<div class="col d-flex justify-content-center mt-3">
-																				<p>
-																						Plan actual: {{ user ? subscription_type : 'Cargando...' }}
-																				</p>
-																		</div>
-
-																		<div class="col d-flex justify-content-center mt-3">
-																				<button class="btn btn-primary"
-																								id="btnActualizarPlan"
-																								v-if="subscription_type"
-																								@click="handleSwitchSubscription">
-																						{{ SubscriptionButtonText }}
-																				</button>
-																		</div>
-																</div>
-														</div>-->
-
-                <div class="col-md-8">
-                    <div class="row">
-                        <h1>Mi perfil</h1>
-                        <p>Gestionar tu información personal</p>
-                    </div>
-                    <div class="row d-flex justify-content-center mt-5 text-start">
-                        <h3>Información personal</h3>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">person </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.first_name.split(' ')[0] + ' ' + user.last_name.split(' ')[0] : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">email </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.email : 'Cargando...'"
-                                       readonly>
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">phone </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.phone : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">home </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.home_address : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">emergency </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.emergency_contact_name : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">contact_emergency </span>
-                                <input type="text"
-                                       class="form-control w-50"
-                                       :value="user ? user.emergency_contact_phone : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                            <li class="list-group-item d-flex align-items-center">
-                                <span class="material-icons text-primary me-3">calendar_month</span>
-                                <input type="date"
-                                       class="form-control w-50"
-                                       :value="user ? user.date_of_birth : 'Cargando...'"
-                                       :readonly="readonly">
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="row d-flex justify-content-center mt-5 text-start">
-                        <h3>Información de ubicación</h3>
-
-                    </div>
+            <div class="row">
+                <div class="row main-top-bar">
+                    <p class="fw-bold mt-3 d-flex justify-content-start">Mi perfil</p>
+                    <p class="fw-light d-flex justify-content-start">Gestionar tu información personal</p>
                 </div>
             </div>
+            <MyProfileComponent :user="user" :readonly="readonly" />
         </div>
     </div>
 </template>
 
 <script>
 import swal from "sweetalert2";
+import MyProfileComponent from "@/components/userprofile/subcomponents/MyProfileComponent.vue";
 
 // const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'UserProfileComponent',
+    components: {MyProfileComponent},
     data() {
         return {
             user: null,
@@ -250,10 +174,6 @@ input:focus {
     border-bottom: #434ed1 solid 2px;
 }
 
-.list-group-item {
-    border-bottom: none !important;
-}
-
 .edit-profile-button{
     background-color: #f0f7ff;
     color: #4f5bf7;
@@ -282,6 +202,13 @@ input:focus {
     background-color: #4f5bf7;
     color: #ffffff;
     font-weight: bold;
+}
+
+.main-top-bar{
+    background-color: #0a2d5e;
+    width: 75vw;
+    display: flex;
+    justify-content: flex-start;
 }
 
 </style>
