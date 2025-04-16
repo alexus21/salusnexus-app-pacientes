@@ -52,7 +52,7 @@
             <div class="subscription-plan-card recommended" v-if="!yearly">
                 <div class="plan-header">
                     <span class="plan-badge">ADVANCED</span>
-                    <span class="recommended-badge">RECOMENDADO</span>
+                    <span class="recommended-badge">{{display_message}}</span>
                 </div>
                 <p class="plan-name">Plan profesional</p>
                 <div class="plan-pricing">
@@ -77,7 +77,7 @@
              <div class="subscription-plan-card recommended" v-if="yearly">
                 <div class="plan-header">
                     <span class="plan-badge">ADVANCED</span>
-                     <span class="recommended-badge">RECOMENDADO</span>
+<!--                     <span class="recommended-badge">RECOMENDADO</span>-->
                 </div>
                  <p class="plan-name">Plan profesional</p>
                  <div class="plan-pricing">
@@ -127,6 +127,10 @@ export default {
         showThis: {
             type: Boolean,
             default: true
+        },
+        display_message: {
+            type: String,
+            default: 'Recomendado'
         }
     },
     data() {

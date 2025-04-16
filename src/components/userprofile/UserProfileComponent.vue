@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3">
+        <div class="col-md-3 fixed-sidebar">
             <!-- User Profile Card -->
             <div class="profile-card mt-3 text-center">
                 <img :src="profile_photo" :alt="`${user?.first_name || ''} profile picture`" class="profile-photo">
@@ -75,12 +75,7 @@ export default {
             activeSection: 'profile',
             menuItems: [
                 {section: 'profile', label: 'Mi Perfil', icon: 'fa-solid fa-user', component: 'MyProfileComponent'},
-                {
-                    section: 'subscription',
-                    label: 'Mi Suscripción',
-                    icon: 'fa-solid fa-credit-card',
-                    component: 'MySubscriptionComponent'
-                },
+                {section: 'subscription', label: 'Mi Suscripción', icon: 'fa-solid fa-credit-card', component: 'MySubscriptionComponent'},
                 {section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: null},
                 {section: 'notifications', label: 'Notificaciones', icon: 'fa-solid fa-bell', component: null},
                 {section: 'settings', label: 'Configuración', icon: 'fa-solid fa-gear', component: null}
@@ -264,5 +259,46 @@ input {
 input:focus {
     outline: none;
     border-bottom: #434ed1 solid 2px;
+}
+
+.fixed-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 15px;
+    width: 25%; /* This corresponds to col-md-3 (3/12 = 25%) */
+    z-index: 1000;
+    background-color: #fff; /* Add background color to prevent content show-through */
+}
+
+/* Add padding to the main content area to account for the fixed sidebar */
+.col-md-9 {
+    margin-left: 25%; /* Same as fixed-sidebar width */
+    padding: 15px;
+    width: 75%; /* This corresponds to col-md-9 (9/12 = 75%) */
+}
+
+/* Make sure the row takes full width */
+.row {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    display: flex;
+}
+
+/* Ensure proper mobile view */
+@media (max-width: 768px) {
+    .fixed-sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .col-md-9 {
+        margin-left: 0;
+        width: 100%;
+    }
 }
 </style>
