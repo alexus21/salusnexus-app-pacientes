@@ -55,6 +55,7 @@ import Swal from "sweetalert2";
 import MyProfileComponent from "@/components/userprofile/subcomponents/MyProfileComponent.vue";
 import MySubscriptionComponent from "@/components/userprofile/subcomponents/MySubscription.vue";
 import LogoutComponent from "@/components/logout/LogoutComponent.vue";
+import SecurityComponent from "@/components/userprofile/subcomponents/SecurityComponent.vue";
 
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
@@ -64,6 +65,7 @@ export default {
         MyProfileComponent,
         MySubscriptionComponent,
         LogoutComponent,
+        SecurityComponent
     },
 
     data() {
@@ -76,7 +78,7 @@ export default {
             menuItems: [
                 {section: 'profile', label: 'Mi Perfil', icon: 'fa-solid fa-user', component: 'MyProfileComponent'},
                 {section: 'subscription', label: 'Mi Suscripción', icon: 'fa-solid fa-credit-card', component: 'MySubscriptionComponent'},
-                {section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: null},
+                {section: 'security', label: 'Seguridad', icon: 'fa-solid fa-shield', component: 'SecurityComponent'},
                 {section: 'notifications', label: 'Notificaciones', icon: 'fa-solid fa-bell', component: null},
                 {section: 'settings', label: 'Configuración', icon: 'fa-solid fa-gear', component: null}
             ]
