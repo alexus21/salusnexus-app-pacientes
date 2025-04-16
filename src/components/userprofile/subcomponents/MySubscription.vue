@@ -28,8 +28,9 @@
             <p class="text-black fw-bold mt-3 d-flex justify-content-start">Información de facturación</p>
             <p class="text-secondary d-flex justify-content-start">Detalles de tu método de pago actual</p>
             <div class="col d-flex justify-content-start mt-3 text-start">
-                <div>
-                    <i class="fa solid fa-credit-card"></i>
+                <div class="d-flex justify-content-center align-items-center"
+                     style="width: 50px; height: 50px; background-color: #fff; border-radius: 50%">
+                    <i class="fa solid fa-credit-card" style="color: #2271af"></i>
                 </div>
                 <div class="ms-3">
                     <p>Visa terminada en: {{user.card_number}}</p>
