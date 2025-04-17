@@ -154,7 +154,7 @@
                                 <i class="fas fa-heartbeat"></i> {{ clinic.speciality_name }}
                             </div>
                             <div class="patient-location">
-                                <i class="fas fa-map-marker-alt"></i> {{ clinic.clinic_address_reference }}, {{clinic.city_name}}
+                                <i class="fas fa-map-marker-alt"></i> {{ clinic.clinic_address_reference }}, {{clinic.city_name}}, {{clinic.department_name}}
                             </div>
                         </div>
                         <div class="patient-actions">
