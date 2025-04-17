@@ -67,7 +67,7 @@
                 </p>
             </div>
 
-            <div class="stats-cards">
+            <div class="stats-cards d-none">
                 <div class="stat-card">
                     <div class="stat-content">
                         <h3>Pacientes Potenciales</h3>
@@ -151,11 +151,10 @@
                                 <i class="fas fa-file-medical"></i> Dr. {{ clinic.first_name + ' ' + clinic.last_name }}
                             </div>
                             <div class="patient-specialty">
-                                <i class="fas fa-heartbeat"></i> {{ clinic.speciality_type.charAt(0).toUpperCase() + clinic.speciality_type.slice(1) }}
+                                <i class="fas fa-heartbeat"></i> {{ clinic.speciality_name }}
                             </div>
                             <div class="patient-location">
-                                <i class="fas fa-map-marker-alt"></i> {{ clinic.address_reference }}
-                                <span class="distance">A {{ clinic.distance }} km de tu consultorio</span>
+                                <i class="fas fa-map-marker-alt"></i> {{ clinic.clinic_address_reference }}, {{clinic.city_name}}
                             </div>
                         </div>
                         <div class="patient-actions">
@@ -169,7 +168,7 @@
                 </div>
             </div>
 
-            <div class="analytics-section">
+<!--            <div class="analytics-section">
                 <div class="analytics-section-header">
                     <h2>Análisis de Pacientes Potenciales</h2>
                     <div class="view-all-link">
@@ -207,7 +206,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>-->
         </div>
     </div>
 </template>
@@ -317,6 +316,7 @@ export default {
                 }
 
                 this.clinics = data.data;
+                localStorage.setItem('clinics', JSON.stringify(this.clinics));
                 console.log(this.clinics);
             } catch (error) {
                 console.log(error);
