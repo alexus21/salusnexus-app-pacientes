@@ -1,11 +1,12 @@
 import {createRouter, createWebHistory} from "vue-router";
 import HomeComponent from "@/components/home/HomeComponent.vue";
-import LoginHome from "@/components/dashboard/LoginHome.vue";
+// import LoginHome from "@/components/dashboard/LoginHome.vue";
 import SubscriptionPlansComponent
     from "@/components/subscriptionplan/SubscriptionPlansComponent.vue";
 import LoginPage from "@/components/login/LoginPage.vue";
 import RegisterPage from "@/components/register/RegisterPage.vue";
 import AddPaymentMethodComponent from "@/components/paymentmethod/AddPaymentMethodComponent.vue";
+import ClinicasComponent from "@/components/clinicas/ClinicasComponent.vue";
 
 import {validateAuth} from "@/utils/auth";
 import VerifyAccountComponent from "@/components/verifyaccount/VerifyAccountComponent.vue";
@@ -36,10 +37,10 @@ const routes = [
     {
         path: '/login-home',
         name: 'loginHome',
-        component: LoginHome,
+        component: ClinicasComponent,
         meta: {
             requiresAuth: true,
-            hideHeader: true
+            hideHeader: false
         }
     },
     {
@@ -131,6 +132,15 @@ const routes = [
                 component: PatientConfigurationSection
             }
         ]
+    },
+    {
+        path: '/clinica/:id',
+        name: 'ClinicaDetalle',
+        component: () => import('@/components/clinicas/ClinicaDetalle.vue'),
+        meta: {
+            requiresAuth: false,
+            hideHeader: false
+        }
     },
     {
         path: '/:pathMatch(.*)*',
