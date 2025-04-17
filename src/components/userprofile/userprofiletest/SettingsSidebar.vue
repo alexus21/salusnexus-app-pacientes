@@ -3,15 +3,15 @@
     <div class="user-info">
       <div class="avatar-container">
         <div class="avatar-placeholder">
-          <img src="/img/default-avatar.png" alt="Avatar" class="avatar-img" v-if="false">
-          <div class="avatar-initials" v-else>CM</div>
+          <img :src="profile_photo" alt="Avatar" class="avatar-img" v-if="profile_photo">
+          <div class="avatar-initials" v-else>{{ userInitials }}</div>
           <div class="avatar-overlay">
             <i class="fas fa-camera"></i>
           </div>
         </div>
       </div>
-      <h5 class="user-name">Carlos Martínez</h5>
-      <p class="user-email">carlos.martinez@ejemplo.com</p>
+      <h5 class="user-name">{{ userFullName }}</h5>
+      <p class="user-email">{{ user?.email || 'Cargando...' }}</p>
       <button class="btn btn-outline-primary btn-sm edit-profile-btn">
         <i class="fas fa-pencil-alt me-1"></i> Editar perfil
       </button>
@@ -56,17 +56,40 @@
 <script>
 export default {
   name: 'SettingsSidebar',
+  props: {
+    user: {
+      type: Object,
+      default: null
+    },
+    profile_photo: {
+      type: String,
+      default: null
+    }
+  },
   data() {
     return {
       showMobileNav: false // Estado para controlar visibilidad en móvil
+    };
+  },
+  computed: {
+    userFullName() {
+      if (!this.user) return 'Cargando...';
+      const firstName = this.user?.first_name?.split(' ')[0] || '';
+      const lastName = this.user?.last_name?.split(' ')[0] || '';
+      return `${firstName} ${lastName}`;
+    },
+    userInitials() {
+      if (!this.user) return '??';
+      const firstName = this.user?.first_name?.charAt(0).toUpperCase() || '';
+      const lastName = this.user?.last_name?.charAt(0).toUpperCase() || '';
+      return `${firstName}${lastName}`;
     }
   },
   methods: {
     logout() {
-      // Aquí iría la lógica para cerrar sesión
-      console.log("Cerrar sesión");
-      // Ejemplo: this.$store.dispatch('auth/logout');
-      // this.$router.push('/');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      this.$router.push({ name: 'Home' });
     },
     toggleMobileNav() {
       this.showMobileNav = !this.showMobileNav;

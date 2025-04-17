@@ -6,13 +6,13 @@
         <h3 class="section-title">Mi Perfil</h3>
         <p class="section-subtitle">Gestiona tu información personal</p>
       </div>
-      <button class="btn btn-primary action-btn">
-        <i class="fas fa-pencil-alt me-2"></i>Editar
+      <button class="btn btn-primary action-btn" @click="toggleEditMode">
+        <i class="fas fa-pencil-alt me-2"></i>{{ readonly ? 'Editar' : 'Cancelar' }}
       </button>
     </div>
 
     <!-- Información Personal -->
-    <div class="card info-card">
+    <div v-if="user" class="card info-card">
       <div class="card-glow"></div>
       <div class="card-header">
         <i class="fas fa-id-card header-icon"></i>
@@ -28,7 +28,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Nombre completo</span>
-                <span class="info-value">Carlos Martínez</span>
+                <span class="info-value">{{ userFullName }}</span>
               </div>
             </div>
           </div>
@@ -40,7 +40,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Correo electrónico</span>
-                <span class="info-value">carlos.martinez@ejemplo.com</span>
+                <span class="info-value">{{ user.email || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -52,7 +52,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Teléfono</span>
-                <span class="info-value">+503 7123 4567</span>
+                <span class="info-value">{{ user.phone || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -64,7 +64,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">DUI (Documento Único de Identidad)</span>
-                <span class="info-value">12345678-9</span>
+                <span class="info-value">{{ user.dui || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Fecha de nacimiento</span>
-                <span class="info-value">15/04/1985</span>
+                <span class="info-value">{{ user.birthdate || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -88,16 +88,22 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Dirección</span>
-                <span class="info-value">Col. Escalón, San Salvador, El Salvador</span>
+                <span class="info-value">{{ user.address || 'No especificado' }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div v-else class="loading-indicator">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p>Cargando información personal...</p>
+    </div>
 
     <!-- Contacto de emergencia -->
-    <div class="card info-card mt-4">
+    <div v-if="user" class="card info-card mt-4">
       <div class="emergency-glow"></div>
       <div class="card-header">
         <i class="fas fa-heartbeat header-icon text-danger"></i>
@@ -110,7 +116,7 @@
           </div>
           <div class="info-text">
             <span class="info-label">Contacto de emergencia</span>
-            <span class="info-value">Ana Martínez - +503 7765 4321</span>
+            <span class="info-value">{{ emergencyContact.name }} - {{ emergencyContact.phone }}</span>
           </div>
           <div class="emergency-action">
             <button class="btn btn-sm btn-link">
@@ -126,7 +132,41 @@
 
 <script>
 export default {
-  name: 'ProfileSection'
+  name: 'ProfileSection',
+  props: {
+    user: {
+      type: Object,
+      default: null
+    },
+    readonly: {
+      type: Boolean,
+      default: true
+    },
+    profile_photo: {
+      type: String,
+      default: null
+    }
+  },
+  computed: {
+    userFullName() {
+      if (!this.user) return 'Cargando...';
+      return `${this.user.first_name} ${this.user.last_name}`;
+    },
+    emergencyContact() {
+      if (!this.user || !this.user.emergency_contact) {
+        return { 
+          name: 'No especificado',
+          phone: 'No especificado'
+        };
+      }
+      return this.user.emergency_contact;
+    }
+  },
+  methods: {
+    toggleEditMode() {
+      this.$parent.toggleEditMode();
+    }
+  }
 }
 </script>
 
@@ -539,5 +579,22 @@ export default {
     font-size: 0.85rem;
     padding: 6px 12px;
   }
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1);
+  margin-bottom: 20px;
+}
+
+.loading-indicator p {
+  margin-top: 15px;
+  color: #6B7280;
 }
 </style> 

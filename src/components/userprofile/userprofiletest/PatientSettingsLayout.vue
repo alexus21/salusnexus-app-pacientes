@@ -8,12 +8,16 @@
     <div class="container-fluid">
       <div class="row g-0">
         <div class="col-md-3 col-lg-2 sidebar-container">
-          <SettingsSidebar />
+          <SettingsSidebar :user="user" :profile_photo="profile_photo" />
         </div>
         <div class="col-md-9 col-lg-10 content-container">
-          <router-view v-slot="{ Component }">
+          <router-view 
+            v-slot="{ Component }" 
+            :user="user" 
+            :readonly="readonly"
+            :profile_photo="profile_photo">
             <transition name="fade" mode="out-in">
-              <component :is="Component" />
+              <component :is="Component" :user="user" :readonly="readonly" :profile_photo="profile_photo" />
             </transition>
           </router-view>
         </div>
@@ -24,13 +28,125 @@
 
 <script>
 import SettingsSidebar from './SettingsSidebar.vue';
+import Swal from "sweetalert2";
+
+const API_URL = process.env.VUE_APP_API_URL;
+const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
   name: 'PatientSettingsLayout',
   components: {
     SettingsSidebar
+  },
+  data() {
+    return {
+      user: null,
+      profile_photo: null,
+      subscription_type: '',
+      readonly: true,
+    };
+  },
+  computed: {
+    userFullName() {
+      if (!this.user) return 'Cargando...';
+      const firstName = this.user.first_name.split(' ')[0];
+      const lastName = this.user.last_name.split(' ')[0];
+      return `${firstName} ${lastName}`;
+    },
+    isVerified() {
+      return this.user?.verified || false;
+    }
+  },
+  async mounted() {
+    await this.loadUserData();
+  },
+  methods: {
+    async loadUserData() {
+      try {
+        const response = await fetch(`${API_URL}/userprofile`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          if (error.message === 'Token has expired') {
+            this.logout();
+          }
+          return;
+        }
+
+        const data = await response.json();
+        if (!data.status) {
+          return;
+        }
+
+        this.user = data.data;
+        localStorage.setItem('user', JSON.stringify(data.data)); // <- Guardar en localStore para usarlo en otras vistas
+
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (this.user) {
+          this.profile_photo = `${API_URL_IMAGE}/${this.user.profile_photo_path}`;
+          this.setSubscriptionType();
+          await this.checkVerificationStatus();
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    },
+
+    setSubscriptionType() {
+      if (!this.user.subscription_type) {
+        this.subscription_type = 'Cargando...';
+        return;
+      }
+
+      this.subscription_type = this.user.subscription_type === 'paciente_gratis'
+        ? 'Gratuito'
+        : 'Premium';
+    },
+
+    async checkVerificationStatus() {
+      if (!this.isVerified) {
+        await this.showVerificationAlert();
+      }
+    },
+
+    async showVerificationAlert() {
+      const result = await Swal.fire({
+        icon: 'warning',
+        iconColor: '#D69656',
+        title: '¡Atención!',
+        text: 'Tu cuenta no está verificada. Por favor verifica tu cuenta para acceder a todas las funciones.',
+        confirmButtonText: 'Verificar',
+        confirmButtonColor: '#5660d6',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        allowEscapeKey: false,
+        allowOutsideClick: false,
+      });
+
+      if (result.isConfirmed) {
+        this.$router.push({name: 'VerifyPatientAccount'});
+      }
+    },
+
+    toggleEditMode() {
+      this.readonly = !this.readonly;
+    },
+
+    logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      this.$router.push({ name: 'Home' });
+    }
   }
-}
+};
 </script>
 
 <style scoped>

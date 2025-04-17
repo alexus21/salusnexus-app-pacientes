@@ -25,11 +25,11 @@
           <div class="setting-content">
             <h5 class="setting-title">Cambiar contraseña</h5>
             <p class="setting-description">Actualiza tu contraseña periódicamente para mayor seguridad</p>
-            <form @submit.prevent="updatePassword" class="settings-form mt-3">
+            <form @submit.prevent="changePassword" class="settings-form mt-3">
               <div class="input-group-wrapper mb-3">
                 <label for="currentPassword" class="form-label">Contraseña actual</label>
                 <div class="password-input-group">
-                  <input :type="showPassword.current ? 'text' : 'password'" class="form-control" id="currentPassword" v-model="passwords.current">
+                  <input :type="showPassword.current ? 'text' : 'password'" class="form-control" id="currentPassword" v-model="currentPassword">
                   <button type="button" class="password-toggle" @click="togglePassword('current')">
                     <i :class="showPassword.current ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                   </button>
@@ -38,12 +38,12 @@
               <div class="input-group-wrapper mb-3">
                 <label for="newPassword" class="form-label">Nueva contraseña</label>
                 <div class="password-input-group">
-                  <input :type="showPassword.new ? 'text' : 'password'" class="form-control" id="newPassword" v-model="passwords.new">
+                  <input :type="showPassword.new ? 'text' : 'password'" class="form-control" id="newPassword" v-model="newPassword">
                   <button type="button" class="password-toggle" @click="togglePassword('new')">
                     <i :class="showPassword.new ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                   </button>
                 </div>
-                <div class="password-strength mt-2" v-if="passwords.new">
+                <div class="password-strength mt-2" v-if="newPassword">
                   <div class="strength-indicator" :class="passwordStrength"></div>
                   <span class="strength-text">{{ passwordStrengthText }}</span>
                 </div>
@@ -51,13 +51,13 @@
               <div class="input-group-wrapper mb-3">
                 <label for="confirmPassword" class="form-label">Confirmar nueva contraseña</label>
                 <div class="password-input-group">
-                  <input :type="showPassword.confirm ? 'text' : 'password'" class="form-control" id="confirmPassword" v-model="passwords.confirm">
+                  <input :type="showPassword.confirm ? 'text' : 'password'" class="form-control" id="confirmPassword" v-model="confirmPassword">
                   <button type="button" class="password-toggle" @click="togglePassword('confirm')">
                     <i :class="showPassword.confirm ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                   </button>
                 </div>
-                <div class="passwords-match mt-1" v-if="passwords.new && passwords.confirm">
-                  <template v-if="passwords.new === passwords.confirm">
+                <div class="passwords-match mt-1" v-if="newPassword && confirmPassword">
+                  <template v-if="newPassword === confirmPassword">
                     <i class="fas fa-check-circle text-success me-1"></i>
                     <span class="text-success">Las contraseñas coinciden</span>
                   </template>
@@ -67,7 +67,7 @@
                   </template>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary action-btn">
+              <button type="submit" class="btn btn-primary action-btn" :disabled="isLoading">
                 <i class="fas fa-key me-2"></i>Actualizar contraseña
               </button>
             </form>
@@ -186,13 +186,24 @@
 <script>
 export default {
   name: 'SecuritySection',
+  props: {
+    user: {
+      type: Object,
+      default: null
+    },
+    readonly: {
+      type: Boolean,
+      default: true
+    }
+  },
   data() {
     return {
-      passwords: {
-        current: '',
-        new: '',
-        confirm: ''
-      },
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      passwordError: '',
+      passwordSuccess: '',
+      isLoading: false,
       showPassword: {
         current: false,
         new: false,
@@ -202,13 +213,22 @@ export default {
       loginAlertsEnabled: true, // Default based on image
       showDeleteModal: false,
       deleteConfirmText: ''
-    }
+    };
   },
   computed: {
+    isVerified() {
+      return this.user?.verified || false;
+    },
+    lastLogin() {
+      if (!this.user || !this.user.last_login) {
+        return 'No disponible';
+      }
+      return new Date(this.user.last_login).toLocaleString();
+    },
     passwordStrength() {
-      if (!this.passwords.new) return '';
+      if (!this.newPassword) return '';
       
-      const password = this.passwords.new;
+      const password = this.newPassword;
       const hasUpperCase = /[A-Z]/.test(password);
       const hasLowerCase = /[a-z]/.test(password);
       const hasNumbers = /\d/.test(password);
@@ -231,38 +251,81 @@ export default {
     }
   },
   methods: {
+    toggleEditMode() {
+      this.$parent.toggleEditMode();
+    },
     togglePassword(field) {
       this.showPassword[field] = !this.showPassword[field];
     },
-    updatePassword() {
-      // Lógica para actualizar contraseña
-      console.log('Actualizando contraseña...', this.passwords);
-      
-      // Validación básica
-      if (!this.passwords.current) {
-        alert('Por favor, ingresa tu contraseña actual');
+    async changePassword() {
+      if (!this.validatePasswordForm()) {
         return;
       }
+
+      this.isLoading = true;
       
-      if (this.passwords.new !== this.passwords.confirm) {
-        alert('Las contraseñas no coinciden');
-        return;
+      try {
+        const API_URL = process.env.VUE_APP_API_URL;
+        const response = await fetch(`${API_URL}/change-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            current_password: this.currentPassword,
+            new_password: this.newPassword,
+            new_password_confirmation: this.confirmPassword
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status) {
+          this.passwordSuccess = 'Contraseña actualizada correctamente';
+          this.passwordError = '';
+          this.resetPasswordForm();
+        } else {
+          this.passwordError = data.message || 'Error al cambiar la contraseña';
+          this.passwordSuccess = '';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        this.passwordError = 'Error de conexión. Inténtalo de nuevo.';
+        this.passwordSuccess = '';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    validatePasswordForm() {
+      this.passwordError = '';
+      
+      if (!this.currentPassword) {
+        this.passwordError = 'Debes ingresar tu contraseña actual';
+        return false;
       }
       
-      if (this.passwordStrength === 'weak') {
-        alert('Por favor, elige una contraseña más segura');
-        return;
+      if (!this.newPassword) {
+        this.passwordError = 'Debes ingresar una nueva contraseña';
+        return false;
       }
       
-      // Aquí iría la llamada a la API
-      alert('Contraseña actualizada con éxito (simulado)');
+      if (this.newPassword.length < 8) {
+        this.passwordError = 'La contraseña debe tener al menos 8 caracteres';
+        return false;
+      }
       
-      // Reset fields
-      this.passwords = {
-        current: '',
-        new: '',
-        confirm: ''
-      };
+      if (this.newPassword !== this.confirmPassword) {
+        this.passwordError = 'Las contraseñas no coinciden';
+        return false;
+      }
+      
+      return true;
+    },
+    resetPasswordForm() {
+      this.currentPassword = '';
+      this.newPassword = '';
+      this.confirmPassword = '';
     },
     confirmDeleteAccount() {
       this.showDeleteModal = true;

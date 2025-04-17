@@ -2,111 +2,116 @@
   <div class="subscription-section">
     <div class="section-header">
       <div class="title-container">
-        <span class="section-badge">Gestión de planes</span>
+        <span class="section-badge">Plan de suscripción</span>
         <h3 class="section-title">Mi Suscripción</h3>
-        <p class="section-subtitle">Administra tu plan y beneficios</p>
+        <p class="section-subtitle">Gestiona tu plan y método de pago</p>
       </div>
-      <div class="billing-cycle">
-        <span>Ciclo de facturación actual</span>
-        <div class="billing-badge">
-          <i class="fas fa-calendar-alt me-1"></i>
-          <span>Mensual</span>
+      <button 
+        v-if="!isPremium" 
+        class="btn btn-primary action-btn"
+        @click="navigateToSubscriptionPlans"
+      >
+        <i class="fas fa-crown me-2"></i>Mejorar a Premium
+      </button>
+    </div>
+
+    <!-- Plan de Suscripción -->
+    <div v-if="user" class="card info-card">
+      <div class="card-glow"></div>
+      <div class="card-header">
+        <i class="fas fa-star header-icon"></i>
+        <h4>Plan Actual</h4>
+      </div>
+      <div class="card-body">
+        <div class="subscription-card">
+          <div class="subscription-header">
+            <div class="subscription-plan-info">
+              <span 
+                class="plan-badge" 
+                :class="{'premium': isPremium, 'free': !isPremium}"
+              >
+                <i :class="isPremium ? 'fas fa-crown' : 'fas fa-star'"></i>
+                Plan {{ subscriptionType }}
+              </span>
+              <span class="plan-status">
+                <i class="fas fa-circle"></i>
+                {{ subscriptionStatus }}
+              </span>
+            </div>
+            <div v-if="isPremium" class="next-billing">
+              <i class="far fa-calendar-alt"></i>
+              Próximo pago: {{ nextBillingDate }}
+            </div>
+          </div>
+          
+          <div class="subscription-details">
+            <h5 class="included-title">Tu plan incluye:</h5>
+            
+            <ul class="features-list">
+              <li v-for="(feature, index) in isPremium ? premiumFeatures : freeFeatures" :key="index">
+                <i class="fas fa-check"></i>
+                {{ feature }}
+              </li>
+            </ul>
+            
+            <div v-if="isPremium" class="payment-method">
+              <h5 class="payment-title">Método de pago</h5>
+              
+              <div v-if="paymentMethod" class="payment-card">
+                <div class="card-icon">
+                  <i :class="paymentMethod.type === 'visa' ? 'fab fa-cc-visa' : 
+                         paymentMethod.type === 'mastercard' ? 'fab fa-cc-mastercard' : 
+                         'fas fa-credit-card'"></i>
+                </div>
+                <div class="card-details">
+                  <span class="card-name">{{ paymentMethod.name }}</span>
+                  <span class="card-number">Terminada en {{ paymentMethod.last_four }}</span>
+                  <span class="card-expiry">Expira: {{ paymentMethod.expiry_date }}</span>
+                </div>
+                <button class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+              </div>
+              
+              <div v-else class="no-payment-method">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>No hay método de pago registrado</span>
+                <button class="btn btn-sm btn-primary">
+                  <i class="fas fa-plus me-1"></i>
+                  Agregar método de pago
+                </button>
+              </div>
+            </div>
+            
+            <div class="subscription-actions">
+              <button 
+                v-if="!isPremium" 
+                class="btn btn-primary upgrade-button"
+                @click="navigateToSubscriptionPlans"
+              >
+                <i class="fas fa-crown me-2"></i>
+                Mejorar a Premium
+              </button>
+              
+              <button 
+                v-if="isPremium" 
+                class="btn btn-outline-danger cancel-button"
+                @click="cancelSubscription"
+                :disabled="isLoading"
+              >
+                <i class="fas fa-times-circle me-2"></i>
+                Cancelar suscripción
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Tu Plan Actual -->
-    <div class="current-plan-section">
-      <div class="subsection-header">
-        <div>
-          <h4 class="subsection-title">Tu plan actual</h4>
-          <p class="subsection-subtitle">Administra tu suscripción y conoce los beneficios disponibles</p>
-        </div>
+    <div v-else class="loading-indicator">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
       </div>
-
-      <div class="period-toggle-container">
-        <div class="period-toggle-inline">
-          <button
-              @click="showMonthly"
-              :class="['toggle-option', { active: !yearly }]">
-            <i class="fas fa-calendar-day me-1"></i>
-            Mensual
-          </button>
-          <button
-              @click="showYearly"
-              :class="['toggle-option', { active: yearly }]">
-            <i class="fas fa-calendar-alt me-1"></i>
-            Anual
-            <span class="saving-badge" v-if="yearly">-15%</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="plans-display">
-        <!-- Plan Básico (Card informativa) -->
-        <div class="subscription-card plan-basic">
-          <div class="card-glow basic-glow"></div>
-          <div class="plan-header">
-            <span class="plan-badge">FREE</span>
-          </div>
-          <p class="plan-name">Plan básico inicial</p>
-          <div class="plan-pricing">
-            <span class="plan-price">$0</span>
-            <span class="plan-period">/ Por miembro</span>
-          </div>
-          <hr class="plan-divider">
-          <ul class="features-list">
-             <li class="feature-item" v-for="(feature, index) in basicPlanFeatures" :key="`basic-${index}`">
-               <i class="fas fa-check-circle feature-icon"></i>
-               <span>{{ feature }}</span>
-             </li>
-          </ul>
-          <button class="btn btn-outline-secondary plan-action-btn" disabled v-if="currentPlan === 'free'">
-            <span class="current-plan-tag"><i class="fas fa-check me-1"></i>Plan actual</span>
-          </button>
-           <button class="btn btn-outline-primary plan-action-btn" @click="changePlan('free')" v-else>
-            <i class="fas fa-exchange-alt me-1"></i>Cambiar a plan gratuito
-          </button>
-          <p class="plan-footer-text" v-if="currentPlan !== 'free'">No se requiere tarjeta de débito/crédito</p>
-        </div>
-
-        <!-- Plan Profesional (Card informativa) -->
-        <div class="subscription-card plan-advanced">
-          <div class="card-glow premium-glow"></div>
-          <div class="glowing-recommended"></div>
-          <div class="plan-header">
-            <span class="plan-badge">ADVANCED</span>
-            <span class="plan-status-badge" v-if="currentPlan === 'professional'">
-              <i class="fas fa-check-circle me-1"></i>Plan actual
-            </span>
-          </div>
-          <p class="plan-name">Plan profesional</p>
-          <div class="plan-pricing">
-            <span class="plan-price">{{ yearly ? '$60.99' : '$5.99' }}</span>
-            <span class="plan-period">/ Por miembro</span>
-          </div>
-          <hr class="plan-divider">
-          <ul class="features-list">
-            <li class="feature-item" v-for="(feature, index) in advancedPlanFeatures" :key="`advanced-${index}`">
-              <i class="fas fa-check-circle feature-icon"></i>
-              <span>{{ feature }}</span>
-            </li>
-          </ul>
-          <button class="btn btn-outline-secondary plan-action-btn" disabled v-if="currentPlan === 'professional'">
-            <span class="current-plan-tag"><i class="fas fa-check me-1"></i>Tu plan actual</span>
-          </button>
-          <button class="btn btn-primary plan-action-btn" @click="changePlan('professional')" v-else>
-            <i class="fas fa-crown me-1"></i>Cambiar a plan {{ yearly ? 'anual' : 'mensual' }}
-          </button>
-          <p class="plan-footer-text" v-if="currentPlan === 'professional'">Tu suscripción se renovará automáticamente</p>
-          <a href="#" class="change-billing-link" v-if="currentPlan === 'professional' && !yearly" @click.prevent="showYearly">
-            Cambiar a facturación anual <i class="fas fa-arrow-right ms-1"></i>
-          </a>
-          <a href="#" class="change-billing-link" v-if="currentPlan === 'professional' && yearly" @click.prevent="showMonthly">
-            Cambiar a facturación mensual <i class="fas fa-arrow-right ms-1"></i>
-          </a>
-        </div>
-      </div>
+      <p>Cargando información de suscripción...</p>
     </div>
 
     <!-- Información de Facturación -->
@@ -149,6 +154,12 @@ export default {
   components: {
       // SubscriptionFeatureItem // Descomenta si es importado localmente
   },
+  props: {
+    user: {
+      type: Object,
+      default: null
+    }
+  },
   data() {
     return {
       yearly: false, // Empieza mostrando mensual
@@ -167,7 +178,41 @@ export default {
         'Soporte prioritario para la gestión de citas',
         'Consejos de salud personalizados según perfil'
       ],
+      isLoading: false
     };
+  },
+  computed: {
+    subscriptionType() {
+      if (!this.user || !this.user.subscription_type) {
+        return 'Cargando...';
+      }
+      
+      return this.user.subscription_type === 'paciente_gratis' 
+        ? 'Gratuito'
+        : 'Premium';
+    },
+    subscriptionStatus() {
+      if (!this.user) return 'Desconocido';
+      
+      return this.user.subscription_status || 'Activo';
+    },
+    nextBillingDate() {
+      if (!this.user || !this.user.next_billing_date) {
+        return 'No disponible';
+      }
+      
+      return new Date(this.user.next_billing_date).toLocaleDateString();
+    },
+    isPremium() {
+      return this.user?.subscription_type === 'paciente_premium';
+    },
+    paymentMethod() {
+      if (!this.user || !this.user.payment_method) {
+        return null;
+      }
+      
+      return this.user.payment_method;
+    }
   },
   methods: {
     showMonthly() {
@@ -180,6 +225,43 @@ export default {
       // Lógica para cambiar de plan
       console.log(`Cambiar a plan: ${plan}, periodo: ${this.yearly ? 'anual' : 'mensual'}`);
       // Aquí podrías redirigir a una página de confirmación o checkout
+    },
+    navigateToSubscriptionPlans() {
+      this.$router.push({name: 'SubscriptionPlans'});
+    },
+    async cancelSubscription() {
+      if (!confirm('¿Estás seguro de que deseas cancelar tu suscripción Premium?')) {
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        const API_URL = process.env.VUE_APP_API_URL;
+        const response = await fetch(`${API_URL}/cancel-subscription`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status) {
+          alert('Tu suscripción ha sido cancelada correctamente');
+          
+          // Recargar los datos del usuario para reflejar los cambios
+          this.$parent.loadUserData();
+        } else {
+          alert(data.message || 'Error al cancelar la suscripción');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión. Inténtalo de nuevo.');
+      } finally {
+        this.isLoading = false;
+      }
     }
   }
 }
