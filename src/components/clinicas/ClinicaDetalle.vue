@@ -8,7 +8,7 @@
                         <li class="breadcrumb-item">
                             <router-link :to="{ name: 'loginHome' }">Clínicas</router-link>
                         </li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ clinic.name }}</li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ clinic.clinic_name }}</li>
                     </ol>
                 </nav>
             </div>
@@ -18,16 +18,16 @@
                 <div class="clinic-header">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h1 class="clinic-name mb-2">{{ clinic.name }}</h1>
+                            <h1 class="clinic-name mb-2">{{ clinic.clinic_name }}</h1>
                             <div class="clinic-meta">
                                 <div class="clinic-specialty mb-2">
-                  <span class="specialty-badge" :class="getSpecialtyClass(clinic.specialty)">
-                    {{ clinic.specialty }}
-                  </span>
+                                  <span class="specialty-badge" :class="getSpecialtyClass(clinic.speciality_name)">
+                                    {{ clinic.speciality_name }}
+                                  </span>
                                 </div>
                                 <div class="clinic-location mb-2">
                                     <i class="fas fa-map-marker-alt me-2"></i>
-                                    {{ clinic.location }}
+                                    {{ clinic.address }}, {{clinic.city_name}}
                                 </div>
                                 <div class="clinic-rating d-flex align-items-center mb-3">
                                     <div class="stars me-2">
@@ -38,10 +38,10 @@
                                     <span class="text-muted ms-2">({{ clinic.reviewsCount }} valoraciones)</span>
                                 </div>
                                 <div class="clinic-badges">
-                  <span v-for="(badge, idx) in clinic.badges" :key="idx" :class="['badge me-2', getBadgeClass(badge)]">
-                    <i :class="getBadgeIcon(badge)" class="me-1"></i>
-                    {{ badge }}
-                  </span>
+                                  <span v-for="(badge, idx) in clinic.badges" :key="idx" :class="['badge me-2', getBadgeClass(badge)]">
+                                    <i :class="getBadgeIcon(badge)" class="me-1"></i>
+                                    {{ badge }}
+                                  </span>
                                 </div>
                             </div>
                         </div>
@@ -65,7 +65,7 @@
                     <div class="row g-3">
                         <div class="col-md-8">
                             <div class="gallery-main">
-                                <img :src="clinic.image" :alt="clinic.name" class="img-fluid rounded">
+                                <img :src="API_URL_IMAGE + '/' + clinic.facade_photo" :alt="clinic.clinic_name" class="img-fluid rounded">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -120,8 +120,8 @@
                                     <div class="schedule-item d-flex justify-content-between">
                                         <span class="day">{{ day.day }}</span>
                                         <span class="hours" :class="{ 'text-danger': day.closed }">
-                      {{ day.closed ? 'Cerrado' : day.hours }}
-                    </span>
+                                          {{ day.closed ? 'Cerrado' : day.hours }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
                                         <i class="fas fa-calendar-check text-purple"></i>
                                     </div>
                                     <div class="stat-info">
-                                        <div class="stat-value">{{ clinic.yearsExperience }}</div>
+                                        <div class="stat-value">{{ clinic.years_of_experience }}</div>
                                         <div class="stat-label">Años de experiencia</div>
                                     </div>
                                 </div>
@@ -203,7 +203,7 @@
                                     </div>
                                     <div class="contact-detail">
                                         <a :href="clinic.website" target="_blank"
-                                           rel="noopener noreferrer">{{ clinic.website }}</a>
+                                           rel="noopener noreferrer">{{ clinic.website || '' }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -232,6 +232,10 @@
 </template>
 
 <script>
+
+const API_URL = process.env.VUE_APP_API_URL;
+const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
+
 export default {
     name: 'ClinicaDetalle',
     data() {
@@ -275,10 +279,66 @@ export default {
                     {day: 'Sábado', hours: '8:00 - 13:00', closed: false},
                     {day: 'Domingo', hours: '', closed: true}
                 ]
-            }
+            },
+            API_URL_IMAGE: API_URL_IMAGE,
         };
     },
+    mounted() {
+        // En una implementación real, aquí cargaríamos los datos de la clínica
+        // basados en el ID de la ruta
+        const clinicId = this.$route.params.id;
+        console.log('ID de la clínica:', clinicId);
+        // Simularíamos una llamada a API: this.loadClinicData(clinicId);
+        this.fetchClinic();
+        this.fetchClinicWasViewed();
+    },
     methods: {
+        /*loadData(){
+            this.clinic = JSON.parse(localStorage.getItem('clinics'))[this.$route.params.id];
+        },*/
+        async fetchClinicWasViewed() {
+            const clinic_id = this.$route.params.id;
+            const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
+
+            const response = await fetch(API_URL + '/clinic-view', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({
+                    clinic_id: clinic_id,
+                    patient_id: patient_id
+                })
+            });
+
+            if (!response.ok) {
+                console.error('Error al guardar la vista de la clínica:', response.statusText);
+            }
+        },
+        async fetchClinic() {
+            const response = await fetch(API_URL + '/medical-clinics/show/' + this.$route.params.id, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Error al obtener clínicas:', response.statusText);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!data.status) {
+                console.error('Error al obtener datos');
+                return;
+            }
+
+            this.clinic = data.data;
+        },
         getSpecialtyClass(specialty) {
             const classes = {
                 'Medicina General': 'specialty-blue',
@@ -286,7 +346,8 @@ export default {
                 'Medicina Interna': 'specialty-green',
                 'Pediatría': 'specialty-orange',
                 'Neurología': 'specialty-purple',
-                'Ginecología': 'specialty-pink'
+                'Ginecología': 'specialty-pink',
+                'Dermatología': 'specialty-pink'
             };
             return classes[specialty] || 'specialty-default';
         },
@@ -309,13 +370,6 @@ export default {
             return icons[badge] || 'fas fa-tag';
         }
     },
-    mounted() {
-        // En una implementación real, aquí cargaríamos los datos de la clínica
-        // basados en el ID de la ruta
-        const clinicId = this.$route.params.id;
-        console.log('ID de la clínica:', clinicId);
-        // Simularíamos una llamada a API: this.loadClinicData(clinicId);
-    }
 };
 </script>
 
