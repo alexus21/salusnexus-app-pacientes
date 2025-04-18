@@ -79,9 +79,9 @@
                     <div class="filter-section-content">
                         <div class="location-filter">
                             <div class="input-group">
-                <span class="input-group-text">
-                  <i class="fas fa-map-marker-alt"></i>
-                </span>
+                                <span class="input-group-text">
+                                  <i class="fas fa-map-marker-alt"></i>
+                                </span>
                                 <select class="form-select" v-model="locationFilter">
                                     <option value="">Todas las ubicaciones</option>
                                     <option value="san-salvador">San Salvador</option>

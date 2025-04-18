@@ -317,7 +317,6 @@ export default {
 
                 this.clinics = data.data;
                 localStorage.setItem('clinics', JSON.stringify(this.clinics));
-                console.log(this.clinics);
             } catch (error) {
                 console.log(error);
             }

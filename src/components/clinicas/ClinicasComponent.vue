@@ -31,13 +31,13 @@
             <div class="search-box-wrapper">
                 <div class="search-row">
                     <div class="search-input-container">
-            <span class="search-icon">
-              <i class="fas fa-search"></i>
-            </span>
-                        <input type="text"
+                    <span class="search-icon">
+                      <i class="fas fa-search"></i>
+                    </span>
+                        <input v-model="searchQuery"
                                class="search-input"
                                placeholder="Buscar clínica, especialidad o médico..."
-                               v-model="searchQuery">
+                               type="text">
                     </div>
                     <div class="search-actions">
                         <button class="filter-button" @click="showFilterDialog = true">
@@ -77,16 +77,16 @@
         <!-- Pestañas de filtrado -->
         <div class="filter-tabs mb-4">
             <div class="tab-container">
-                <div class="nav-tab" :class="{ active: activeTab === 'todas' }" @click="setActiveTab('todas')">
+                <div :class="{ active: activeTab === 'todas' }" class="nav-tab" @click="setActiveTab('todas')">
                     Todas
                 </div>
-                <div class="nav-tab" :class="{ active: activeTab === 'cercanas' }" @click="setActiveTab('cercanas')">
+                <div :class="{ active: activeTab === 'cercanas' }" class="nav-tab" @click="setActiveTab('cercanas')">
                     Cercanas
                 </div>
-                <div class="nav-tab" :class="{ active: activeTab === 'populares' }" @click="setActiveTab('populares')">
+                <div :class="{ active: activeTab === 'populares' }" class="nav-tab" @click="setActiveTab('populares')">
                     Populares
                 </div>
-                <div class="nav-tab" :class="{ active: activeTab === 'nuevas' }" @click="setActiveTab('nuevas')">
+                <div :class="{ active: activeTab === 'nuevas' }" class="nav-tab" @click="setActiveTab('nuevas')">
                     Nuevas
                 </div>
             </div>
@@ -95,13 +95,12 @@
         <!-- Listado de clínicas -->
         <div class="clinics-section mb-5">
             <h2 class="section-title text-center mb-4">Clínicas Destacadas</h2>
-
             <div class="row">
                 <div v-for="(clinic, index) in clinicsList"
                      :key="index"
+                     :data-aos-delay="index * 100"
                      class="col-lg-4 col-md-6 mb-4"
-                     data-aos="fade-up"
-                     :data-aos-delay="index * 100">
+                     data-aos="fade-up">
                     <clinic-card
                         :clinic="clinic"
                         @toggle-favorite="toggleFavorite(index)"
@@ -127,7 +126,7 @@
             <nav aria-label="Paginación de clínicas">
                 <ul class="pagination">
                     <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Anterior">
+                        <a aria-label="Anterior" class="page-link" href="#">
                             <span>Anterior</span>
                         </a>
                     </li>
@@ -135,7 +134,7 @@
                     <li class="page-item"><a class="page-link" href="#">2</a></li>
                     <li class="page-item"><a class="page-link" href="#">3</a></li>
                     <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Siguiente">
+                        <a aria-label="Siguiente" class="page-link" href="#">
                             <span>Siguiente</span>
                         </a>
                     </li>
@@ -158,6 +157,9 @@ import FilterDialog from './FilterDialog.vue';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
+const API_URL = process.env.VUE_APP_API_URL;
+// const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
+
 export default {
     name: 'ClinicasComponent',
     components: {
@@ -171,86 +173,7 @@ export default {
             activeFilters: {},
             activeTab: 'todas',
             activeSpecialty: '',
-            clinicsList: [
-                {
-                    id: 1,
-                    name: 'Clínica San Rafael',
-                    specialty: 'Medicina General',
-                    location: 'Col. Escalón, San Salvador',
-                    doctors: 12,
-                    patients: 1240,
-                    rating: 4.8,
-                    availability: 'Hoy',
-                    image: '/clinic/clinic_01.jpeg',
-                    badges: ['Certificada'],
-                    isFavorite: false
-                },
-                {
-                    id: 2,
-                    name: 'Centro Médico La Esperanza',
-                    specialty: 'Cardiología',
-                    location: 'Santa Tecla, La Libertad',
-                    doctors: 8,
-                    patients: 950,
-                    rating: 4.5,
-                    availability: 'Mañana',
-                    image: '/clinic/clinic_02.jpeg',
-                    badges: ['Popular'],
-                    isFavorite: false
-                },
-                {
-                    id: 3,
-                    name: 'Hospital Diagnóstico',
-                    specialty: 'Medicina Interna',
-                    location: 'San Salvador',
-                    doctors: 15,
-                    patients: 1800,
-                    rating: 4.9,
-                    availability: 'Hoy',
-                    image: '/clinic/clinic_03.jpeg',
-                    badges: ['Recomendada'],
-                    isFavorite: false
-                },
-                {
-                    id: 4,
-                    name: 'Clínica Familiar Soyapango',
-                    specialty: 'Pediatría',
-                    location: 'Soyapango, San Salvador',
-                    doctors: 6,
-                    patients: 520,
-                    rating: 4.3,
-                    availability: 'Jueves',
-                    image: '/clinic/clinic_04.jpeg',
-                    badges: ['Nueva'],
-                    isFavorite: false
-                },
-                {
-                    id: 5,
-                    name: 'Centro de Especialidades Médicas',
-                    specialty: 'Neurología',
-                    location: 'Col. San Benito, San Salvador',
-                    doctors: 10,
-                    patients: 1100,
-                    rating: 4.7,
-                    availability: 'Viernes',
-                    image: '/clinic/clinic_05.jpeg',
-                    badges: ['Certificada'],
-                    isFavorite: false
-                },
-                {
-                    id: 6,
-                    name: 'Clínica Santa Teresa',
-                    specialty: 'Ginecología',
-                    location: 'Santa Ana',
-                    doctors: 7,
-                    patients: 890,
-                    rating: 4.6,
-                    availability: 'Lunes',
-                    image: '/clinic/clinic_06.jpeg',
-                    badges: ['Popular'],
-                    isFavorite: false
-                }
-            ],
+            clinicsList: [],
             originalClinicsList: [] // Para guardar la lista original y poder resetear filtros
         };
     },
@@ -258,6 +181,7 @@ export default {
         this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
     },
     mounted() {
+        this.fetchClinics();
         AOS.init({
             duration: 800,
             easing: 'ease-in-out',
@@ -265,6 +189,31 @@ export default {
         });
     },
     methods: {
+        async fetchClinics() {
+            const response = await fetch(API_URL + '/medical-clinics/view', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Error al obtener clínicas:', response.statusText);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!data.status) {
+                console.error('Error al obtener datos');
+                return;
+            }
+
+            this.clinicsList = data.data;
+            localStorage.setItem('clinics', JSON.stringify(data.data));
+            console.log(this.clinicsList);
+        },
         searchClinics() {
             console.log('Buscando:', this.searchQuery);
             // Aquí iría la lógica de búsqueda

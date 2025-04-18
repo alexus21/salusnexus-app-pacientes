@@ -1,11 +1,11 @@
 <template>
     <div class="clinic-card">
         <div class="card h-100 border-0 shadow-sm">
-            <div class="clinic-badge" v-if="clinic.badges && clinic.badges.length">
-        <span :class="getBadgeClass(clinic.badges[0])">
-          <i :class="getBadgeIcon(clinic.badges[0])"></i>
-          {{ clinic.badges[0] }}
-        </span>
+            <div v-if="clinic.badges && clinic.badges.length" class="clinic-badge">
+                <span :class="getBadgeClass(clinic.badges[0])">
+                <i :class="getBadgeIcon(clinic.badges[0])"></i>
+                {{ clinic.badges[0] }}
+                </span>
             </div>
 
             <div class="favorite-button" @click.prevent="toggleFavorite">
@@ -13,8 +13,8 @@
             </div>
 
             <div class="clinic-image">
-                <img :src="clinic.image" :alt="clinic.name" class="card-img-top">
-                <div class="availability-badge" v-if="clinic.availability">
+                <img :alt="clinic.name" :src="API_URL_IMAGE + '/' + clinic.facade_photo" class="card-img-top">
+                <div v-if="clinic.availability" class="availability-badge">
                     <i class="far fa-calendar-check me-1"></i>
                     {{ clinic.availability }}
                 </div>
@@ -22,22 +22,22 @@
 
             <div class="card-body">
                 <div class="specialty-badge mb-2">
-          <span :class="getSpecialtyClass(clinic.specialty)">
-            {{ clinic.specialty }}
-          </span>
+                    <span :class="getSpecialtyClass(clinic.specialty_name)">
+                    {{ clinic.specialty_name }}
+                    </span>
                 </div>
 
-                <h5 class="clinic-name">{{ clinic.name }}</h5>
+                <h5 class="clinic-name">{{ clinic.clinic_name }}</h5>
 
                 <div class="clinic-location mb-2">
                     <i class="fas fa-map-marker-alt me-1 text-muted"></i>
-                    {{ clinic.location }}
+                    {{ clinic.address }}, {{clinic.city_name}}
                 </div>
 
                 <div class="clinic-stats d-flex gap-3 mb-3">
                     <!-- <div class="stat-item">
-                      <i class="fas fa-user-md text-primary me-1"></i>
-                      {{ clinic.doctors }} médicos
+                    <i class="fas fa-user-md text-primary me-1"></i>
+                    {{ clinic.doctors }} médicos
                     </div> -->
                     <div class="stat-item">
                         <i class="fas fa-users text-success me-1"></i>
@@ -66,6 +66,8 @@
 </template>
 
 <script>
+const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
+
 export default {
     name: 'ClinicCard',
     props: {
@@ -73,6 +75,11 @@ export default {
             type: Object,
             required: true
         }
+    },
+    data() {
+        return {
+            API_URL_IMAGE: API_URL_IMAGE,
+        };
     },
     methods: {
         getSpecialtyClass(specialty) {
@@ -107,17 +114,17 @@ export default {
         getStarClass(position) {
             const rating = this.clinic.rating;
 
-            // Estrella completa
+// Estrella completa
             if (position <= Math.floor(rating)) {
                 return 'fas fa-star';
             }
 
-            // Media estrella
+// Media estrella
             if (position - 0.5 <= rating) {
                 return 'fas fa-star-half-alt';
             }
 
-            // Estrella vacía
+// Estrella vacía
             return 'far fa-star';
         },
         toggleFavorite() {
