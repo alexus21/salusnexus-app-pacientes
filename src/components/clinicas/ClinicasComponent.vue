@@ -182,6 +182,7 @@ export default {
     },
     mounted() {
         this.fetchClinics();
+        this.calculateDistances();
         AOS.init({
             duration: 800,
             easing: 'ease-in-out',
@@ -212,7 +213,44 @@ export default {
 
             this.clinicsList = data.data;
             localStorage.setItem('clinics', JSON.stringify(data.data));
-            console.log(this.clinicsList);
+        },
+        calculateDistances() {
+            const clinics = JSON.parse(localStorage.getItem('clinics'));
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            let clinicLocation = {};
+
+            const userLocation = {
+                lat: user.latitude,
+                lng: user.longitude
+            };
+
+            clinics.forEach(clinic => {
+                console.log(clinic);
+                clinicLocation = {
+                    lat: clinic.clinic_latitude,
+                    lng: clinic.clinic_longitude
+                };
+
+                const distance = this.calculateDistance(clinicLocation, userLocation);
+                console.log("Distancia: " + distance + " km");
+            });
+        },
+        calculateDistance(clinicLocation, userLocation) {
+            let R = 6371; // Radio de la Tierra en km
+            let rLat1 = clinicLocation.lat * (Math.PI / 180);
+            let rLat2 = userLocation.lat * (Math.PI / 180);
+
+            let deltaLat = (userLocation.lat - clinicLocation.lat) * (Math.PI / 180);
+            let deltaLng = (userLocation.lng - clinicLocation.lng) * (Math.PI / 180);
+
+            let a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                Math.cos(rLat1) * Math.cos(rLat2) *
+                Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+
+            let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            let distance = R * c; // Distancia en km
+            return distance.toFixed(2); // Retornar la distancia con 2 decimales
         },
         searchClinics() {
             console.log('Buscando:', this.searchQuery);
