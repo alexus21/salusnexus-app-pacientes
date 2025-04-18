@@ -96,7 +96,7 @@
         <div class="clinics-section mb-5">
             <h2 class="section-title text-center mb-4">Clínicas Destacadas</h2>
             <div class="row">
-                <div v-for="(clinic, index) in clinicsList"
+                <div v-for="(clinic, index) in filteredClinicsList"
                      :key="index"
                      :data-aos-delay="index * 100"
                      class="col-lg-4 col-md-6 mb-4"
@@ -168,13 +168,16 @@ export default {
     },
     data() {
         return {
+            MIN_KILOMETRES: 20,
+
             searchQuery: '',
             showFilterDialog: false,
             activeFilters: {},
             activeTab: 'todas',
             activeSpecialty: '',
             clinicsList: [],
-            originalClinicsList: [] // Para guardar la lista original y poder resetear filtros
+            originalClinicsList: [],
+            filteredClinicsList: [],
         };
     },
     created() {
@@ -218,23 +221,29 @@ export default {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
             const user = JSON.parse(localStorage.getItem('user'));
 
-            let clinicLocation = {};
-
             const userLocation = {
                 lat: user.latitude,
                 lng: user.longitude
             };
 
-            clinics.forEach(clinic => {
-                console.log(clinic);
-                clinicLocation = {
-                    lat: clinic.clinic_latitude,
-                    lng: clinic.clinic_longitude
+            this.clinicsList = clinics.map(clinic => {
+                const clinicLocation = {
+                    lat: parseFloat(clinic.clinic_latitude),
+                    lng: parseFloat(clinic.clinic_longitude)
                 };
 
                 const distance = this.calculateDistance(clinicLocation, userLocation);
-                console.log("Distancia: " + distance + " km");
+                /*console.log("Distancia: " + distance);
+                console.log("Distancia es menor a 10 km: " + (distance < 10));*/
+
+                return {
+                    ...clinic,
+                    distance: distance
+                };
             });
+
+            // console.log(this.clinicsList);
+            this.filteredClinicsList = this.clinicsList.filter(clinic => clinic.distance < this.MIN_KILOMETRES);
         },
         calculateDistance(clinicLocation, userLocation) {
             let R = 6371; // Radio de la Tierra en km
@@ -250,7 +259,7 @@ export default {
 
             let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             let distance = R * c; // Distancia en km
-            return distance.toFixed(2); // Retornar la distancia con 2 decimales
+            return parseFloat(distance.toFixed(2));
         },
         searchClinics() {
             console.log('Buscando:', this.searchQuery);
