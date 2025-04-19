@@ -103,7 +103,7 @@
                      data-aos="fade-up">
                     <clinic-card
                         :clinic="clinic"
-                        @toggle-favorite="toggleFavorite(index)"
+                        @toggle-favorite="toggleFavorite(index, clinic.id)"
                     />
                 </div>
             </div>
@@ -168,7 +168,7 @@ export default {
     },
     data() {
         return {
-            MIN_KILOMETRES: 20,
+            MIN_KILOMETRES: 100,
 
             searchQuery: '',
             showFilterDialog: false,
@@ -275,11 +275,79 @@ export default {
                 );
             }
         },
-        toggleFavorite(index) {
-            this.clinicsList[index].isFavorite = !this.clinicsList[index].isFavorite;
+        async toggleFavorite(index, clinic_id) {
+            if (this.clinicsList[index].isFavorite) {
+                await this.deleteFavorite(index, clinic_id);
+            } else {
+                await this.addNewFavorite(index, clinic_id);
+            }
+        },
+        async addNewFavorite(index, clinic_id) {
+            try {
+                const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
 
-            // En un caso real, aquí se enviaría la información al backend
-            console.log(`Clínica ${this.clinicsList[index].name} ${this.clinicsList[index].isFavorite ? 'agregada a' : 'eliminada de'} favoritos`);
+                const response = await fetch(API_URL + '/favorites/add', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: patient_id,
+                        clinic_id: clinic_id,
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Error al agregar favorito:', response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    console.error('Error en la respuesta del servidor:', data.message);
+                    return;
+                }
+
+                this.clinicsList[index].isFavorite = true;
+            } catch (error) {
+                console.error('Error al agregar favorito:', error);
+            }
+        },
+        async deleteFavorite(index, clinic_id) {
+            try {
+                const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
+
+                const response = await fetch(API_URL + '/favorites/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: patient_id,
+                        clinic_id: clinic_id,
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Error al eliminar favorito:', response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    console.error('Error en la respuesta del servidor:', data.message);
+                    return;
+                }
+
+                this.clinicsList[index].isFavorite = false;
+                console.log(`Clínica ${this.clinicsList[index].clinic_name} eliminada de favoritos`);
+            } catch (error) {
+                console.error('Error al eliminar favorito:', error);
+            }
         },
         setActiveTab(tab) {
             this.activeTab = tab;
