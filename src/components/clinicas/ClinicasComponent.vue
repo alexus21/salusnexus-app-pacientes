@@ -103,7 +103,7 @@
                      data-aos="fade-up">
                     <clinic-card
                         :clinic="clinic"
-                        @toggle-favorite="toggleFavorite(index, clinic.id)"
+                        @toggle-favorite="toggleFavorite(index, clinic)"
                     />
                 </div>
             </div>
@@ -215,7 +215,16 @@ export default {
             }
 
             this.clinicsList = data.data;
-            localStorage.setItem('clinics', JSON.stringify(data.data));
+            // Agregar isFavorite a this.clinicsList
+            this.clinicsList = this.clinicsList.map(clinic => {
+                return {
+                    ...clinic,
+                    isFavorite: false
+                };
+            });
+            this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
+            this.filteredClinicsList = this.clinicsList;
+            localStorage.setItem('clinics', JSON.stringify(this.clinicsList));
         },
         calculateDistances() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
@@ -275,14 +284,14 @@ export default {
                 );
             }
         },
-        async toggleFavorite(index, clinic_id) {
+        async toggleFavorite(index, clinic) {
             if (this.clinicsList[index].isFavorite) {
-                await this.deleteFavorite(index, clinic_id);
+                await this.deleteFavorite(index, clinic);
             } else {
-                await this.addNewFavorite(index, clinic_id);
+                await this.addNewFavorite(index, clinic);
             }
         },
-        async addNewFavorite(index, clinic_id) {
+        async addNewFavorite(index, clinic) {
             try {
                 const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
 
@@ -294,7 +303,7 @@ export default {
                     },
                     body: JSON.stringify({
                         patient_id: patient_id,
-                        clinic_id: clinic_id,
+                        clinic_id: clinic.id,
                     })
                 });
 
@@ -310,12 +319,12 @@ export default {
                     return;
                 }
 
-                this.clinicsList[index].isFavorite = true;
+                this.filteredClinicsList[index].isFavorite = true;
             } catch (error) {
                 console.error('Error al agregar favorito:', error);
             }
         },
-        async deleteFavorite(index, clinic_id) {
+        async deleteFavorite(index, clinic) {
             try {
                 const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
 
@@ -327,7 +336,7 @@ export default {
                     },
                     body: JSON.stringify({
                         patient_id: patient_id,
-                        clinic_id: clinic_id,
+                        clinic_id: clinic.id,
                     })
                 });
 
@@ -343,8 +352,7 @@ export default {
                     return;
                 }
 
-                this.clinicsList[index].isFavorite = false;
-                console.log(`Clínica ${this.clinicsList[index].clinic_name} eliminada de favoritos`);
+                this.filteredClinicsList[index].isFavorite = false;
             } catch (error) {
                 console.error('Error al eliminar favorito:', error);
             }
