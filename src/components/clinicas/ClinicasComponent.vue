@@ -184,7 +184,9 @@ export default {
         this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
     },
     mounted() {
-        this.fetchClinics();
+        this.fetchClinics().then(() => {
+            this.handleFavorites();
+        });
         this.calculateDistances();
         AOS.init({
             duration: 800,
@@ -225,6 +227,17 @@ export default {
             this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
             this.filteredClinicsList = this.clinicsList;
             localStorage.setItem('clinics', JSON.stringify(this.clinicsList));
+        },
+        handleFavorites(){
+            const clinics = JSON.parse(localStorage.getItem('clinics'));
+
+            const clinicsMap = new Map(this.clinicsList.map(clinic => [clinic.id, clinic]));
+
+            clinics.forEach(clinic => {
+                if (clinic.favorite_id && clinicsMap.has(clinic.id)) {
+                    clinicsMap.get(clinic.id).isFavorite = true;
+                }
+            });
         },
         calculateDistances() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
