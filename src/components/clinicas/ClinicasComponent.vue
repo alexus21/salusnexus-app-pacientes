@@ -183,11 +183,11 @@ export default {
     created() {
         this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
     },
-    mounted() {
-        this.fetchClinics().then(() => {
+    async mounted() {
+        await this.fetchClinics().then(async () => {
+            this.calculateDistances();
             this.handleFavorites();
         });
-        this.calculateDistances();
         AOS.init({
             duration: 800,
             easing: 'ease-in-out',
