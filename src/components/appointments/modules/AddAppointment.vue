@@ -11,7 +11,12 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <select v-model="selected_day" aria-label="Default select example" class="form-select">
+                        <h5>Días hábiles</h5>
+                        <p v-for="schedule in schedules" :key="schedule.id">
+                            <span class="badge bg-primary">{{ schedule.day_of_the_week }}</span>
+                            Desde {{ schedule.start_time }} hasta {{ schedule.end_time }}
+                        </p>
+<!--                        <select v-model="selected_day" aria-label="Default select example" class="form-select">
                             <option disabled value="">Seleccione el dia que desea la cita</option>
                             <option v-for="schedule in schedules"
                                     :key="schedule.id"
@@ -19,13 +24,14 @@
                                 {{ schedule.day_of_the_week }} - Desde {{ schedule.start_time }} hasta
                                 {{ schedule.end_time }}
                             </option>
-                        </select>
+                        </select>-->
                     </div>
                     <div class="mb-3">
                         <div class="input-group">
                                 <span class="input-icon">
                                     <i class="fa-solid fa-calendar-days"></i>
                                 </span>
+                            <span class="input-group-text">Fecha de la cita</span>
                             <input
                                 id="date_of_birth"
                                 v-model="appointment_form.date"
@@ -43,12 +49,10 @@
                             :min-date="minDate"
                             :value="new Date()"
                             class="form-control d-none"
-                            expanded
                             locale="es-SV"
                             mode="date"
                             timezone="UTC"
                             title-position="right"
-                            transition="fade"
                             @dayclick="handleDayClick"
                         />
                     </div>
