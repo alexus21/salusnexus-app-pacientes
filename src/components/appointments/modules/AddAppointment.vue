@@ -14,17 +14,8 @@
                         <h5>Días hábiles</h5>
                         <p v-for="schedule in schedules" :key="schedule.id">
                             <span class="badge bg-primary">{{ schedule.day_of_the_week }}</span>
-                            Desde {{ schedule.start_time }} hasta {{ schedule.end_time }}
+                            Desde {{ formatTime(schedule.start_time) }} hasta {{ formatTime(schedule.end_time) }}
                         </p>
-<!--                        <select v-model="selected_day" aria-label="Default select example" class="form-select">
-                            <option disabled value="">Seleccione el dia que desea la cita</option>
-                            <option v-for="schedule in schedules"
-                                    :key="schedule.id"
-                                    :value="schedule.id">
-                                {{ schedule.day_of_the_week }} - Desde {{ schedule.start_time }} hasta
-                                {{ schedule.end_time }}
-                            </option>
-                        </select>-->
                     </div>
                     <div class="mb-3">
                         <div class="input-group">
@@ -33,8 +24,8 @@
                                 </span>
                             <span class="input-group-text">Fecha de la cita</span>
                             <input
-                                id="date_of_birth"
-                                v-model="appointment_form.date"
+                                id="appointment_date"
+                                v-model="appointment_form.appointment_date"
                                 class="form-control"
                                 placeholder="Fecha de la cita"
                                 readonly
@@ -44,7 +35,7 @@
                         </div>
                         <DatePicker
                             id="datePicker"
-                            v-model="appointment_form.date"
+                            v-model="appointment_form.appointment_date"
                             :disabled-dates="disableDates"
                             :min-date="minDate"
                             :value="new Date()"
@@ -57,36 +48,22 @@
                         />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="exampleFormControlTextarea1">Razón de su visita:</label>
-                        <textarea id="exampleFormControlTextarea1" v-model="visit_reason" class="form-control"
-                                  rows="3"></textarea>
+                        <h5>Tipo de servicio</h5>
+                        <select v-model="appointment_form.service_type" aria-label="Default select example" class="form-select">
+                            <option disabled selected value="">Seleccione el tipo de servicio deseado</option>
+                            <option value="consultorio">Consultorio</option>
+                            <option value="domicilio">Domicilio</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <div class="form-check">
-                            <input id="checkDefault"
-                                   v-model="reminder_sent"
-                                   class="form-check-input"
-                                   type="checkbox">
-                            <label class="form-check-label" for="checkDefault">
-                                Enviarme un recordatorio
-                            </label>
-                        </div>
-                    </div>
-                    <div v-if="reminder_sent" class="mb-3">
-                        <label class="form-check-label" for="checkDefault">
-                            Recordarme en:
-                        </label>
-                        <input id="checkDefault"
-                               v-model="remind_me_at"
-                               class="form-control"
-                               max="60" min="15"
-                               type="number"
-                               value="30">
+                        <h5>Razón de su visita (máximo 250 palabras):</h5>
+                        <textarea id="exampleFormControlTextarea1" v-model="appointment_form.visit_reason" class="form-control"
+                                  rows="3" maxlength="200"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
-                    <button class="btn btn-primary" type="button">Confirmar</button>
+                    <button class="btn btn-primary" type="button" @click="fetchAddNewAppointment">Solicitar</button>
                 </div>
             </div>
         </div>
@@ -97,6 +74,9 @@
 import * as bootstrap from 'bootstrap';
 import {DatePicker} from 'v-calendar';
 import 'v-calendar/style.css';
+import swal from "sweetalert2";
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
     name: 'AddAppointment',
@@ -137,14 +117,10 @@ export default {
             remind_me_at: 30,
             date: new Date(),
             minDate: new Date(),
-            noWorkDays: [{
-                repeat: {
-                    weekdays: [3, 5, 6, 7]
-                }
-            }
-            ],
             appointment_form: {
-                date: "",
+                appointment_date: "",
+                service_type: "",
+                visit_reason: "",
             }
         };
     },
@@ -158,6 +134,12 @@ export default {
     },
     methods: {
         // Define your component's methods here
+        formatTime(time) {
+            const [hours, minutes] = time.split(':');
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12; // Convert 0 to 12 for AM/PM
+            return `${formattedHours}:${minutes} ${period}`;
+        },
         open() {
             const modal = new bootstrap.Modal(document.getElementById('addNewAppointmentModal'));
             modal.show();
@@ -172,7 +154,7 @@ export default {
             const today = new Date().toLocaleDateString('en-CA');
 
             if (selectedDate >= today) { // Changed to >= since you want future dates
-                this.appointment_form.date = selectedDate;
+                this.appointment_form.appointment_date = selectedDate;
             } else {
                 console.log('Selected date is in the past and not allowed.');
             }
@@ -211,7 +193,56 @@ export default {
                     }
                 };
             });
-        }
+        },
+
+        // Fetch data from API
+        async fetchAddNewAppointment(){
+            try{
+                const response = await fetch(API_URL + "/appointments/add", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(this.appointment_form)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud: ' + response.status);
+                }
+
+                const data = await response.json();
+
+                if(!data.status){
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
+                // Mostrar mensaje de éxito
+                swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: data.message,
+                    confirmButtonText: 'Aceptar'
+                });
+
+                // Cerrar el modal
+                this.close();
+            } catch (error) {
+                console.error('Error:', error);
+                swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al procesar la solicitud.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        },
 
     },
 
