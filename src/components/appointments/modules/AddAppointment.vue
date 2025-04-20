@@ -22,6 +22,37 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <div class="input-group">
+                                <span class="input-icon">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                </span>
+                            <input
+                                id="date_of_birth"
+                                v-model="appointment_form.date"
+                                class="form-control"
+                                placeholder="Fecha de la cita"
+                                readonly
+                                type="date"
+                                @click="showDatePicker"
+                            />
+                        </div>
+                        <DatePicker
+                            id="datePicker"
+                            v-model="appointment_form.date"
+                            :disabled-dates="disableDates"
+                            :min-date="minDate"
+                            :value="new Date()"
+                            class="form-control d-none"
+                            expanded
+                            locale="es-SV"
+                            mode="date"
+                            timezone="UTC"
+                            title-position="right"
+                            transition="fade"
+                            @dayclick="handleDayClick"
+                        />
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label" for="exampleFormControlTextarea1">Razón de su visita:</label>
                         <textarea id="exampleFormControlTextarea1" v-model="visit_reason" class="form-control"
                                   rows="3"></textarea>
@@ -60,9 +91,14 @@
 
 <script>
 import * as bootstrap from 'bootstrap';
+import {DatePicker} from 'v-calendar';
+import 'v-calendar/style.css';
 
 export default {
     name: 'AddAppointment',
+    components: {
+        DatePicker
+    },
     props: {
         clinic: {
             type: Object,
@@ -77,19 +113,44 @@ export default {
         return {
             // Define your component's data properties here
             visible: false,
+            disabledDates: [],
+
+            // Días de la semana (formato para V-Calendar)
+            diasSemana: {
+                Domingo: 1,
+                Lunes: 2,
+                Martes: 3,
+                Miércoles: 4,
+                Jueves: 5,
+                Viernes: 6,
+                Sábado: 7
+            },
 
             // Datos a enviar:
             selected_day: "",
             visit_reason: "",
             reminder_sent: false,
             remind_me_at: 30,
+            date: new Date(),
+            minDate: new Date(),
+            noWorkDays: [{
+                repeat: {
+                    weekdays: [3, 5, 6, 7]
+                }
+            }
+            ],
+            appointment_form: {
+                date: "",
+            }
         };
     },
     computed: {
-        // Define any computed properties here
+        disableDates() {
+            return this.setDisabledDaysFromAPI();
+        }
     },
     async mounted() {
-        // Code to run when the component is mounted
+        //
     },
     methods: {
         // Define your component's methods here
@@ -101,6 +162,53 @@ export default {
             const modal = bootstrap.Modal.getInstance(document.getElementById('addNewAppointmentModal'));
             modal.hide();
         },
+        handleDayClick(day) {
+            // Format date as YYYY-MM-DD
+            const selectedDate = day.date.toLocaleDateString('en-CA'); // this format gives YYYY-MM-DD
+            const today = new Date().toLocaleDateString('en-CA');
+
+            if (selectedDate >= today) { // Changed to >= since you want future dates
+                this.appointment_form.date = selectedDate;
+            } else {
+                console.log('Selected date is in the past and not allowed.');
+            }
+
+            this.hideDatePicker();
+        },
+        showDatePicker() {
+            const datePicker = document.getElementById('datePicker');
+            datePicker.classList.remove('d-none');
+        },
+        hideDatePicker() {
+            const datePicker = document.getElementById('datePicker');
+            datePicker.classList.add('d-none');
+        },
+        setDisabledDaysFromAPI() {
+            const diasSemana = {
+                Domingo: 1,
+                Lunes: 2,
+                Martes: 3,
+                Miércoles: 4,
+                Jueves: 5,
+                Viernes: 6,
+                Sábado: 7
+            };
+
+            // Extraer días habilitados
+            const availableDays = this.schedules.map(item => diasSemana[item.day_of_the_week]);
+
+            const allDays = [1, 2, 3, 4, 5, 6, 7];
+            const disabledDays = allDays.filter(day => !availableDays.includes(day));
+
+            return disabledDays.map(day => {
+                return {
+                    repeat: {
+                        weekdays: [day]
+                    }
+                };
+            });
+        }
+
     },
 
 }
