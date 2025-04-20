@@ -156,7 +156,7 @@ export default {
                             if (responseData.status) {
                                 localStorage.clear();
                                 this.isLogged = false;
-                                window.location.reload();
+                                this.$router.push({name: 'Home'});
                             } else {
                                 swal.fire({
                                     icon: "error",
