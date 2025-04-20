@@ -56,7 +56,7 @@
             </div>
 
             <div class="card-footer bg-white border-0 pt-0">
-                <router-link :to="{ name: 'ClinicaDetalle', params: { id: clinic.id }}" class="btn btn-primary d-block">
+                <router-link :to="{ name: 'ClinicaDetalle', params: { id: clinic.id }}" class="btn btn-primary d-block" @click="fetchClinicWasViewed">
                     Ver detalles
                     <i class="fas fa-chevron-right ms-1"></i>
                 </router-link>
@@ -66,6 +66,7 @@
 </template>
 
 <script>
+const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
@@ -129,7 +130,27 @@ export default {
         },
         toggleFavorite() {
             this.$emit('toggle-favorite');
-        }
+        },
+        async fetchClinicWasViewed() {
+            const clinic_id = this.clinic.id;
+            const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
+
+            const response = await fetch(API_URL + '/clinic-view', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({
+                    clinic_id: clinic_id,
+                    patient_id: patient_id
+                })
+            });
+
+            if (!response.ok) {
+                console.error('Error al guardar la vista de la clínica:', response.statusText);
+            }
+        },
     }
 };
 </script>

@@ -50,7 +50,7 @@
                                 <button class="btn btn-outline-primary me-2">
                                     <i class="far fa-heart me-1"></i> Guardar
                                 </button>
-                                <button class="btn btn-primary">
+                                <button class="btn btn-primary" @click="openAppointmentModal">
                                     <i class="fas fa-calendar-plus me-1"></i> Agendar cita
                                 </button>
                             </div>
@@ -227,17 +227,22 @@
                     </div>
                 </div>
             </div>
+
+            <AddAppointment ref="addNewAppointmentModal" :clinic="clinic" :schedules="schedules" />
         </div>
     </div>
 </template>
 
 <script>
 
+import AddAppointment from "@/components/appointments/modules/AddAppointment.vue";
+
 const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'ClinicaDetalle',
+    components: {AddAppointment},
     data() {
         return {
             clinic: {
@@ -281,6 +286,7 @@ export default {
                 ]
             },
             API_URL_IMAGE: API_URL_IMAGE,
+            schedules: [],
         };
     },
     mounted() {
@@ -289,33 +295,14 @@ export default {
         const clinicId = this.$route.params.id;
         console.log('ID de la clínica:', clinicId);
         // Simularíamos una llamada a API: this.loadClinicData(clinicId);
-        this.fetchClinic();
-        this.fetchClinicWasViewed();
+        this.fetchClinic().then(() => {
+            this.fetchSchedules();
+        });
     },
     methods: {
         /*loadData(){
             this.clinic = JSON.parse(localStorage.getItem('clinics'))[this.$route.params.id];
         },*/
-        async fetchClinicWasViewed() {
-            const clinic_id = this.$route.params.id;
-            const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
-
-            const response = await fetch(API_URL + '/clinic-view', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                body: JSON.stringify({
-                    clinic_id: clinic_id,
-                    patient_id: patient_id
-                })
-            });
-
-            if (!response.ok) {
-                console.error('Error al guardar la vista de la clínica:', response.statusText);
-            }
-        },
         async fetchClinic() {
             const response = await fetch(API_URL + '/medical-clinics/show/' + this.$route.params.id, {
                 method: 'GET',
@@ -368,7 +355,37 @@ export default {
                 'Nueva': 'fas fa-bolt'
             };
             return icons[badge] || 'fas fa-tag';
-        }
+        },
+        openAppointmentModal() {
+            this.$refs.addNewAppointmentModal.open();
+        },
+        async fetchSchedules() {
+            try {
+                const response = await fetch(`${API_URL}/schedules/get/clinic/` + this.clinic.id, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    console.log('Error', data);
+                    return;
+                }
+
+                this.schedules = data.data;
+                console.log(this.schedules);
+            } catch (error) {
+                console.error("Error fetching schedules:", error);
+            }
+        },
     },
 };
 </script>
