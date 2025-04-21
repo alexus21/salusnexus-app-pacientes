@@ -169,7 +169,7 @@ export default {
     },
     data() {
         return {
-            MIN_KILOMETRES: 100,
+            MIN_KILOMETRES: 1000,
 
             searchQuery: '',
             showFilterDialog: false,
@@ -275,6 +275,7 @@ export default {
                     });
                 });
             }
+            console.log('handleFavorites filteredClinicsList:', JSON.stringify(this.filteredClinicsList));
         },
         calculateDistances() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
@@ -293,18 +294,15 @@ export default {
                     };
 
                     const distance = this.calculateDistance(clinicLocation, userLocation);
-                    /*console.log("Distancia: " + distance);
-                    console.log("Distancia es menor a 10 km: " + (distance < 10));*/
-
                     return {
                         ...clinic,
                         distance: distance
                     };
                 });
             }
-
-            // console.log(this.clinicsList);
+            console.log('calculateDistances clinicsList:', JSON.stringify(this.clinicsList));
             this.filteredClinicsList = this.clinicsList.filter(clinic => clinic.distance < this.MIN_KILOMETRES);
+            console.log('calculateDistances filteredClinicsList:', JSON.stringify(this.filteredClinicsList));
         },
         calculateDistance(clinicLocation, userLocation) {
             let R = 6371; // Radio de la Tierra en km

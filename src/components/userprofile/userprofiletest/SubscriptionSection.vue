@@ -20,7 +20,7 @@
       <div class="card-glow"></div>
       <div class="card-header">
         <i class="fas fa-star header-icon"></i>
-        <h4>Plan Actual</h4>
+        <h4>{{ subscriptionType }}</h4>
       </div>
       <div class="card-body">
         <div class="subscription-card">
@@ -30,8 +30,7 @@
                 class="plan-badge" 
                 :class="{'premium': isPremium, 'free': !isPremium}"
               >
-                <i :class="isPremium ? 'fas fa-crown' : 'fas fa-star'"></i>
-                Plan {{ subscriptionType }}
+                <i :class="isPremium ? 'fas fa-crown' : 'fas fa-star'"></i>{{ subscriptionType }}
               </span>
               <span class="plan-status">
                 <i class="fas fa-circle"></i>
@@ -46,17 +45,14 @@
           
           <div class="subscription-details">
             <h5 class="included-title">Tu plan incluye:</h5>
-            
-            <ul class="features-list">
+            <ul class="features-list" style="margin-bottom: 24px;">
               <li v-for="(feature, index) in isPremium ? premiumFeatures : freeFeatures" :key="index">
                 <i class="fas fa-check"></i>
                 {{ feature }}
               </li>
             </ul>
-            
-            <div v-if="isPremium" class="payment-method">
-              <h5 class="payment-title">Método de pago</h5>
-              
+            <div v-if="isPremium" class="payment-method-section">
+              <h5 class="payment-title" style="margin-top: 24px;">Método de pago</h5>
               <div v-if="paymentMethod" class="payment-card">
                 <div class="card-icon">
                   <i :class="paymentMethod.type === 'visa' ? 'fab fa-cc-visa' : 
@@ -72,36 +68,16 @@
                   <i class="fas fa-pencil-alt"></i>
                 </button>
               </div>
-              
-              <div v-else class="no-payment-method">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>No hay método de pago registrado</span>
-                <button class="btn btn-sm btn-primary">
-                  <i class="fas fa-plus me-1"></i>
-                  Agregar método de pago
+              <div class="cancel-section">
+                <button 
+                  class="btn btn-outline-danger cancel-button"
+                  @click="cancelSubscription"
+                  :disabled="isLoading"
+                >
+                  <i class="fas fa-times-circle me-2"></i>
+                  Cancelar suscripción
                 </button>
               </div>
-            </div>
-            
-            <div class="subscription-actions">
-              <button 
-                v-if="!isPremium" 
-                class="btn btn-primary upgrade-button"
-                @click="navigateToSubscriptionPlans"
-              >
-                <i class="fas fa-crown me-2"></i>
-                Mejorar a Premium
-              </button>
-              
-              <button 
-                v-if="isPremium" 
-                class="btn btn-outline-danger cancel-button"
-                @click="cancelSubscription"
-                :disabled="isLoading"
-              >
-                <i class="fas fa-times-circle me-2"></i>
-                Cancelar suscripción
-              </button>
             </div>
           </div>
         </div>
@@ -123,22 +99,22 @@
       </div>
       <div class="card-body">
         <p class="subsection-subtitle mb-4">Detalles de tu método de pago actual</p>
-         <div class="info-item">
-              <div class="card-preview">
-                <div class="card-design">
-                  <div class="card-chip"></div>
-                  <div class="card-brand">VISA</div>
-                  <div class="card-number">**** **** **** 4567</div>
-                </div>
-              </div>
-              <div class="info-text">
-                <span class="info-label">Visa terminada en 4567</span>
-                <span class="info-value">Próximo cobro: 15/05/2023</span>
-              </div>
-              <button class="btn btn-outline-primary btn-sm ms-auto update-payment-btn">
-                <i class="fas fa-pencil-alt me-1"></i>Actualizar método de pago
-              </button>
+        <div class="info-item">
+          <div class="card-preview">
+            <div class="card-design">
+              <div class="card-chip"></div>
+              <div class="card-brand">VISA</div>
+              <div class="card-number">**** **** **** 4567</div>
             </div>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Visa terminada en 4567</span>
+            <span class="info-value">Próximo cobro: 15/05/2023</span>
+          </div>
+          <button class="btn btn-outline-primary btn-sm ms-auto update-payment-btn">
+            <i class="fas fa-pencil-alt me-1"></i>Actualizar método de pago
+          </button>
+        </div>
       </div>
     </div>
 
@@ -186,10 +162,12 @@ export default {
       if (!this.user || !this.user.subscription_type) {
         return 'Cargando...';
       }
-      
-      return this.user.subscription_type === 'paciente_gratis' 
-        ? 'Gratuito'
-        : 'Premium';
+      const type = this.user.subscription_type;
+      if (type === 'paciente_gratis') return 'Plan Gratuito';
+      if (type === 'paciente_avanzado') return 'Plan Premium';
+      if (type === 'profesional_gratis') return 'Plan Profesional Gratuito';
+      if (type === 'profesional_avanzado') return 'Plan Profesional Premium';
+      return type;
     },
     subscriptionStatus() {
       if (!this.user) return 'Desconocido';
@@ -204,7 +182,10 @@ export default {
       return new Date(this.user.next_billing_date).toLocaleDateString();
     },
     isPremium() {
-      return this.user?.subscription_type === 'paciente_premium';
+      return (
+        this.user?.subscription_type === 'paciente_avanzado' ||
+        this.user?.subscription_type === 'profesional_avanzado'
+      );
     },
     paymentMethod() {
       if (!this.user || !this.user.payment_method) {
@@ -814,6 +795,65 @@ export default {
   border-color: #0d6efd;
 }
 
+.payment-method-section {
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-section {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.no-payment-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.payment-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0a2d5e;
+  margin-bottom: 8px;
+}
+
+.payment-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  background: #f8fbff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+
+.card-icon {
+  width: 32px;
+  height: 22px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  margin-right: 14px;
+}
+
+.card-details {
+  font-size: 0.98rem;
+  color: #374151;
+}
+
+@media (max-width: 767.98px) {
+  .payment-method-section {
+    margin-top: 24px;
+    padding-top: 12px;
+  }
+  .cancel-section {
+    margin-top: 16px;
+  }
+}
+
 /* Responsive */
 /* Tablets (768px to 991px) */
 @media (min-width: 768px) and (max-width: 991.98px) {
@@ -990,4 +1030,4 @@ export default {
     padding: 2px 4px;
   }
 }
-</style> 
+</style>
