@@ -156,6 +156,7 @@ import ClinicCard from './ClinicCard.vue';
 import FilterDialog from './FilterDialog.vue';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import swal from "sweetalert2";
 
 const API_URL = process.env.VUE_APP_API_URL;
 // const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
@@ -178,6 +179,7 @@ export default {
             clinicsList: [],
             originalClinicsList: [],
             filteredClinicsList: [],
+            favorites: [],
         };
     },
     created() {
@@ -186,6 +188,7 @@ export default {
     async mounted() {
         await this.fetchClinics().then(async () => {
             this.calculateDistances();
+            await this.fetchMyFavorites();
             this.handleFavorites();
         });
         AOS.init({
@@ -230,16 +233,46 @@ export default {
             this.filteredClinicsList = this.clinicsList;
             localStorage.setItem('clinics', JSON.stringify(this.clinicsList));
         },
+        async fetchMyFavorites(){
+            try {
+                const response = await fetch(API_URL + '/favorites/me', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Error al obtener favoritos:', response.statusText);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    console.error('Error en la respuesta del servidor:', data.message);
+                    return;
+                }
+
+                this.favorites = data.data;
+                console.log(this.favorites);
+            } catch (error) {
+                console.error('Error al obtener favoritos:', error);
+            }
+        },
         handleFavorites() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
 
-            if(this.clinicsList.length > 0) {
-                const clinicsMap = new Map(this.clinicsList.map(clinic => [clinic.id, clinic]));
+            if(this.filteredClinicsList.length > 0) {
+                const clinicsMap = new Map(this.filteredClinicsList.map(clinic => [clinic.id, clinic]));
 
                 clinics.forEach(clinic => {
-                    if (clinic.favorite_id && clinicsMap.has(clinic.id)) {
-                        clinicsMap.get(clinic.id).isFavorite = true;
-                    }
+                    this.favorites.forEach(fav => {
+                        if (fav.clinic_id === clinic.id) {
+                            clinicsMap.get(clinic.id).isFavorite = true;
+                        }
+                    });
                 });
             }
         },
@@ -313,6 +346,23 @@ export default {
         async addNewFavorite(index, clinic) {
             try {
                 const patient_id = JSON.parse(localStorage.getItem('user')).patient_profile_id;
+                const is_verified = JSON.parse(localStorage.getItem('user')).verified;
+
+                if (!is_verified) {
+                    swal.fire({
+                        title: 'Verifica tu cuenta',
+                        text: 'Para agregar clínicas a favoritos, verifica tu cuenta primero.',
+                        icon: 'warning',
+                        confirmButtonText: 'Verificar ahora',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.$router.push({ name: 'VerifyPatientAccount' });
+                        }
+                    });
+                    return;
+                }
 
                 const response = await fetch(API_URL + '/favorites/add', {
                     method: 'POST',
@@ -341,6 +391,8 @@ export default {
                 this.filteredClinicsList[index].isFavorite = true;
             } catch (error) {
                 console.error('Error al agregar favorito:', error);
+            } finally {
+                await this.fetchMyFavorites();
             }
         },
         async deleteFavorite(index, clinic) {
@@ -374,6 +426,8 @@ export default {
                 this.filteredClinicsList[index].isFavorite = false;
             } catch (error) {
                 console.error('Error al eliminar favorito:', error);
+            } finally {
+                await this.fetchMyFavorites();
             }
         },
         setActiveTab(tab) {
