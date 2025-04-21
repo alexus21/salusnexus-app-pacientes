@@ -218,26 +218,30 @@ export default {
 
             this.clinicsList = data.data;
             // Agregar isFavorite a this.clinicsList
-            this.clinicsList = this.clinicsList.map(clinic => {
-                return {
-                    ...clinic,
-                    isFavorite: false
-                };
-            });
+            if (this.clinicsList.length > 0) {
+                this.clinicsList = this.clinicsList.map(clinic => {
+                    return {
+                        ...clinic,
+                        isFavorite: false
+                    };
+                });
+            }
             this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
             this.filteredClinicsList = this.clinicsList;
             localStorage.setItem('clinics', JSON.stringify(this.clinicsList));
         },
-        handleFavorites(){
+        handleFavorites() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
 
-            const clinicsMap = new Map(this.clinicsList.map(clinic => [clinic.id, clinic]));
+            if(this.clinicsList.length > 0) {
+                const clinicsMap = new Map(this.clinicsList.map(clinic => [clinic.id, clinic]));
 
-            clinics.forEach(clinic => {
-                if (clinic.favorite_id && clinicsMap.has(clinic.id)) {
-                    clinicsMap.get(clinic.id).isFavorite = true;
-                }
-            });
+                clinics.forEach(clinic => {
+                    if (clinic.favorite_id && clinicsMap.has(clinic.id)) {
+                        clinicsMap.get(clinic.id).isFavorite = true;
+                    }
+                });
+            }
         },
         calculateDistances() {
             const clinics = JSON.parse(localStorage.getItem('clinics'));
@@ -248,21 +252,23 @@ export default {
                 lng: user.longitude
             };
 
-            this.clinicsList = clinics.map(clinic => {
-                const clinicLocation = {
-                    lat: parseFloat(clinic.clinic_latitude),
-                    lng: parseFloat(clinic.clinic_longitude)
-                };
+            if (this.clinicsList.length > 0) {
+                this.clinicsList = clinics.map(clinic => {
+                    const clinicLocation = {
+                        lat: parseFloat(clinic.clinic_latitude),
+                        lng: parseFloat(clinic.clinic_longitude)
+                    };
 
-                const distance = this.calculateDistance(clinicLocation, userLocation);
-                /*console.log("Distancia: " + distance);
-                console.log("Distancia es menor a 10 km: " + (distance < 10));*/
+                    const distance = this.calculateDistance(clinicLocation, userLocation);
+                    /*console.log("Distancia: " + distance);
+                    console.log("Distancia es menor a 10 km: " + (distance < 10));*/
 
-                return {
-                    ...clinic,
-                    distance: distance
-                };
-            });
+                    return {
+                        ...clinic,
+                        distance: distance
+                    };
+                });
+            }
 
             // console.log(this.clinicsList);
             this.filteredClinicsList = this.clinicsList.filter(clinic => clinic.distance < this.MIN_KILOMETRES);
