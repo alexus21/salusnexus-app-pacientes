@@ -63,7 +63,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
-                    <button class="btn btn-primary" type="button" @click="fetchAddNewAppointment">Solicitar</button>
+                    <button class="btn btn-primary" type="button" @click="askForAddNewAppointment">Solicitar</button>
                 </div>
             </div>
         </div>
@@ -121,6 +121,8 @@ export default {
                 appointment_date: "",
                 service_type: "",
                 visit_reason: "",
+                clinic_id: this.clinic.id,
+                patient_id: localStorage.getItem("user").patient_profile_id,
             }
         };
     },
@@ -194,7 +196,20 @@ export default {
                 };
             });
         },
-
+        askForAddNewAppointment() {
+            swal.fire({
+                title: 'Confirmación',
+                text: "¿Está seguro de que desea solicitar esta cita?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, solicitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.fetchAddNewAppointment();
+                }
+            });
+        },
         // Fetch data from API
         async fetchAddNewAppointment(){
             try{

@@ -116,12 +116,10 @@
                         <h3 class="section-title mt-4">Horarios de atención</h3>
                         <div class="clinic-schedule">
                             <div class="row">
-                                <div v-for="(day, idx) in clinic.schedule" :key="idx" class="col-md-6">
+                                <div v-for="schedule in schedules" :key="schedule.id" class="col-md-6">
                                     <div class="schedule-item d-flex justify-content-between">
-                                        <span class="day">{{ day.day }}</span>
-                                        <span class="hours" :class="{ 'text-danger': day.closed }">
-                                          {{ day.closed ? 'Cerrado' : day.hours }}
-                                        </span>
+                                        <span class="badge bg-primary">{{ schedule.day_of_the_week }}</span>
+                                        Desde {{ formatTime(schedule.start_time) }} hasta {{ formatTime(schedule.end_time) }}
                                     </div>
                                 </div>
                             </div>
@@ -236,6 +234,7 @@
 <script>
 
 import AddAppointment from "@/components/appointments/modules/AddAppointment.vue";
+import swal from "sweetalert2";
 
 const API_URL = process.env.VUE_APP_API_URL;
 const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
@@ -303,6 +302,12 @@ export default {
         /*loadData(){
             this.clinic = JSON.parse(localStorage.getItem('clinics'))[this.$route.params.id];
         },*/
+        formatTime(time) {
+            const [hours, minutes] = time.split(':');
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12; // Convert 0 to 12 for AM/PM
+            return `${formattedHours}:${minutes} ${period}`;
+        },
         async fetchClinic() {
             const response = await fetch(API_URL + '/medical-clinics/show/' + this.$route.params.id, {
                 method: 'GET',
@@ -357,6 +362,15 @@ export default {
             return icons[badge] || 'fas fa-tag';
         },
         openAppointmentModal() {
+            if (this.schedules.length === 0) {
+                swal.fire({
+                    icon: 'info',
+                    title: 'Atención',
+                    text: 'No hay horarios disponibles para esta clínica.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
             this.$refs.addNewAppointmentModal.open();
         },
         async fetchSchedules() {
