@@ -126,7 +126,7 @@ export default {
             this.$router.push({name: 'Login'});
         },
         handleProfileClick() {
-            this.$router.push({name: 'UserProfile'});
+            this.$router.push({name: 'PatientProfile'});
         },
         handleLogoClick() {
             // this.$router.push({name: 'Dashboard'});
