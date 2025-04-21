@@ -1,15 +1,17 @@
 <template>
   <div class="settings-sidebar">
     <div class="user-info">
-      <div class="avatar-container">
-        <div class="avatar-placeholder">
-          <img :src="profile_photo" alt="Avatar" class="avatar-img" v-if="profile_photo">
-          <div class="avatar-initials" v-else>{{ userInitials }}</div>
-          <div class="avatar-overlay">
-            <i class="fas fa-camera"></i>
+      <router-link to="/" class="avatar-link">
+        <div class="avatar-container">
+          <div class="avatar-placeholder">
+            <img :src="profile_photo" alt="Avatar" class="avatar-img" v-if="profile_photo">
+            <div class="avatar-initials" v-else>{{ userInitials }}</div>
+            <div class="avatar-overlay">
+              <i class="fas fa-camera"></i>
+            </div>
           </div>
         </div>
-      </div>
+      </router-link>
       <h5 class="user-name">{{ userFullName }}</h5>
       <p class="user-email">{{ user?.email || 'Cargando...' }}</p>
       <button class="btn btn-outline-primary btn-sm edit-profile-btn">
@@ -559,4 +561,4 @@ export default {
     margin-right: 5px;
   }
 }
-</style> 
+</style>
