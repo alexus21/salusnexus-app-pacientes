@@ -169,7 +169,7 @@ export default {
     },
     data() {
         return {
-            MIN_KILOMETRES: 1000,
+            MIN_KILOMETRES: 10,
 
             searchQuery: '',
             showFilterDialog: false,
