@@ -341,7 +341,7 @@ export default {
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.isVerified = true;
-                    this.$router.push({ name: 'UserProfile' });
+                    this.$router.push({ name: 'PatientProfile' });
                 }
             });
         }

@@ -76,7 +76,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Fecha de nacimiento</span>
-                <span class="info-value">{{ user.birthdate || 'No especificado' }}</span>
+                <span class="info-value">{{ user.date_of_birth || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@
               </div>
               <div class="info-text">
                 <span class="info-label">Dirección</span>
-                <span class="info-value">{{ user.address || 'No especificado' }}</span>
+                <span class="info-value">{{ user.home_address || 'No especificado' }}</span>
               </div>
             </div>
           </div>
@@ -116,7 +116,7 @@
           </div>
           <div class="info-text">
             <span class="info-label">Contacto de emergencia</span>
-            <span class="info-value">{{ emergencyContact.name }} - {{ emergencyContact.phone }}</span>
+            <span class="info-value">{{ emergencyContact.name }}: {{ emergencyContact.phone }}</span>
           </div>
           <div class="emergency-action">
             <button class="btn btn-sm btn-link">
@@ -153,13 +153,16 @@ export default {
       return `${this.user.first_name} ${this.user.last_name}`;
     },
     emergencyContact() {
-      if (!this.user || !this.user.emergency_contact) {
+      if (!this.user || !this.user.emergency_contact_name) {
         return { 
           name: 'No especificado',
           phone: 'No especificado'
         };
       }
-      return this.user.emergency_contact;
+      return {
+        name: this.user.emergency_contact_name,
+        phone: this.user.emergency_contact_phone
+      };
     }
   },
   methods: {
