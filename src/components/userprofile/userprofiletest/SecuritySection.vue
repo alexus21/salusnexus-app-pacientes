@@ -375,13 +375,64 @@ export default {
             this.showDeleteModal = true;
             this.deleteConfirmText = '';
         },
-        deleteAccount() {
-            if (this.deleteConfirmText === 'ELIMINAR') {
-                // Lógica para eliminar cuenta (llamada a API)
-                console.warn('Eliminando cuenta...');
-                alert('Cuenta eliminada con éxito (simulado)');
-                this.showDeleteModal = false;
+        async deleteAccount() {
+            try {
+                const API_URL = process.env.VUE_APP_API_URL;
+                const response = await fetch(`${API_URL}/delete/${this.user.user_id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        keyword: this.deleteConfirmText
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    swal.fire({
+                        title: 'Error',
+                        text: errorData.message || 'Error en la respuesta del servidor',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
+                swal.fire({
+                    title: 'Éxito',
+                    text: 'Cuenta eliminada con éxito',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    localStorage.clear();
+                    this.$router.push({ name: 'Register' });
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión. Inténtalo de nuevo.',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            } finally {
+                this.isLoading = false;
             }
+
         }
     }
 }
