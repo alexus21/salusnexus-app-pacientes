@@ -76,6 +76,7 @@ const routes = [
         path: '/perfil',
         name: 'UserProfile',
         component: UserProfileComponent,
+        redirect: '/paciente/configuracion/perfil',
         meta: {
             requiresAuth: true,
             hideHeader: false
