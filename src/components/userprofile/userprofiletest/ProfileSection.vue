@@ -6,9 +6,14 @@
                 <h3 class="section-title">Mi Perfil</h3>
                 <p class="section-subtitle">Gestiona tu información personal</p>
             </div>
-            <button class="btn btn-primary action-btn" @click="toggleEditMode">
-                <i class="fas fa-pencil-alt me-2"></i>{{ readonly ? 'Editar' : 'Cancelar' }}
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-primary action-btn" @click="toggleEditMode">
+                    <i class="fas fa-pencil-alt me-2"></i>{{ readonly ? 'Editar' : 'Cancelar' }}
+                </button>
+                <button v-if="!readonly" class="btn btn-primary action-btn" @click="fetchUpdatedUser">
+                    <i class="fas fa-pencil-alt me-2"></i>Actualizar
+                </button>
+            </div>
         </div>
 
         <!-- Información Personal -->
@@ -27,8 +32,24 @@
                                 <i class="fas fa-user text-blue"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">Nombre completo</span>
-                                <span class="info-value">{{ userFullName }}</span>
+                                <label class="info-label" for="first-name-input">Nombre</label>
+                                <input
+                                    id="first-name-input"
+                                    type="text"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.first_name"
+                                    :readonly="readonly"
+                                    placeholder="Ingrese su nombre">
+                            </div>
+                            <div class="info-text">
+                                <label class="info-label" for="last-name-input">Apellido</label>
+                                <input
+                                    id="last-name-input"
+                                    type="text"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.last_name"
+                                    :readonly="readonly"
+                                    placeholder="Ingrese su apellido">
                             </div>
                         </div>
                     </div>
@@ -39,8 +60,14 @@
                                 <i class="fas fa-envelope text-purple"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">Correo electrónico</span>
-                                <span class="info-value">{{ user.email || 'No especificado' }}</span>
+                                <label class="info-label" for="email-input">Correo electrónico</label>
+                                <input
+                                    id="email-input"
+                                    type="email"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.email"
+                                    readonly
+                                    placeholder="Ingrese su correo electrónico">
                             </div>
                         </div>
                     </div>
@@ -51,8 +78,14 @@
                                 <i class="fas fa-phone text-orange"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">Teléfono</span>
-                                <span class="info-value">{{ user.phone || 'No especificado' }}</span>
+                                <label class="info-label" for="phone-input">Teléfono</label>
+                                <input
+                                    id="phone-input"
+                                    type="tel"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.phone"
+                                    :readonly="readonly"
+                                    placeholder="Ingrese su número de teléfono">
                             </div>
                         </div>
                     </div>
@@ -63,8 +96,14 @@
                                 <i class="fas fa-hashtag text-teal"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">DUI (Documento Único de Identidad)</span>
-                                <span class="info-value">{{ user.dui || 'No especificado' }}</span>
+                                <label class="info-label" for="dui-input">DUI (Documento Único de Identidad)</label>
+                                <input
+                                    id="dui-input"
+                                    type="text"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.dui"
+                                    readonly
+                                    placeholder="Ingrese su DUI">
                             </div>
                         </div>
                     </div>
@@ -75,8 +114,14 @@
                                 <i class="fas fa-calendar-alt text-indigo"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">Fecha de nacimiento</span>
-                                <span class="info-value">{{ user.date_of_birth || 'No especificado' }}</span>
+                                <label class="info-label" for="date-of-birth-input">Fecha de nacimiento</label>
+                                <input
+                                    id="date-of-birth-input"
+                                    type="date"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.date_of_birth"
+                                    :readonly="readonly"
+                                    placeholder="Ingrese su fecha de nacimiento">
                             </div>
                         </div>
                     </div>
@@ -87,8 +132,14 @@
                                 <i class="fas fa-map-marker-alt text-green"></i>
                             </div>
                             <div class="info-text">
-                                <span class="info-label">Dirección</span>
-                                <span class="info-value">{{ user.home_address || 'No especificado' }}</span>
+                                <label class="info-label" for="address-input">Dirección</label>
+                                <input
+                                    id="address-input"
+                                    type="text"
+                                    class="info-value form-control text-center"
+                                    v-model="localUser.home_address"
+                                    :readonly="readonly"
+                                    placeholder="Ingrese su dirección">
                             </div>
                         </div>
                     </div>
@@ -115,8 +166,23 @@
                         <i class="fas fa-phone-volume text-red"></i>
                     </div>
                     <div class="info-text">
-                        <span class="info-label">Contacto de emergencia</span>
-                        <span class="info-value">{{ emergencyContact.name }}: {{ emergencyContact.phone }}</span>
+                        <label class="info-label" for="emergency-contact-name">Contacto de emergencia</label>
+                        <div class="d-flex align-items-center">
+                            <input
+                                id="emergency-contact-name"
+                                type="text"
+                                class="info-value form-control me-2"
+                                v-model="localUser.emergency_contact_name"
+                                :readonly="readonly"
+                                placeholder="Nombre del contacto">
+                            <input
+                                id="emergency-contact-phone"
+                                type="tel"
+                                class="info-value form-control"
+                                v-model="localUser.emergency_contact_phone"
+                                :readonly="readonly"
+                                placeholder="Teléfono del contacto">
+                        </div>
                     </div>
                     <div class="emergency-action">
                         <button class="btn btn-sm btn-link">
@@ -131,6 +197,10 @@
 </template>
 
 <script>
+import swal from "sweetalert2";
+
+const API_URL = process.env.VUE_APP_API_URL;
+
 export default {
     name: 'ProfileSection',
     props: {
@@ -138,36 +208,94 @@ export default {
             type: Object,
             default: null
         },
-        readonly: {
-            type: Boolean,
-            default: true
-        },
         profile_photo: {
             type: String,
             default: null
         }
     },
-    computed: {
-        userFullName() {
-            if (!this.user) return 'Cargando...';
-            return `${this.user.first_name} ${this.user.last_name}`;
-        },
-        emergencyContact() {
-            if (!this.user || !this.user.emergency_contact_name) {
-                return {
-                    name: 'No especificado',
-                    phone: 'No especificado'
-                };
+    data(){
+        return {
+            readonly: true,
+            localUser: {
+                first_name: '',
+                last_name: '',
+                email: '',
+                phone: '',
+                dui: '',
+                date_of_birth: '',
+                home_address: '',
+                emergency_contact_name: '',
+                emergency_contact_phone: ''
             }
-            return {
-                name: this.user.emergency_contact_name,
-                phone: this.user.emergency_contact_phone
+        }
+    },
+    mounted() {
+        if (this.user) {
+            this.localUser = {
+                first_name: this.user.first_name,
+                last_name: this.user.last_name,
+                email: this.user.email,
+                phone: this.user.phone,
+                dui: this.user.dui,
+                date_of_birth: this.user.date_of_birth,
+                home_address: this.user.home_address,
+                emergency_contact_name: this.user.emergency_contact_name,
+                emergency_contact_phone: this.user.emergency_contact_phone
             };
+        } else{
+            const user = localStorage.getItem('user');
+            if (user) {
+                this.localUser = JSON.parse(user);
+            } else {
+                console.error('No se encontró el usuario en localStorage');
+            }
         }
     },
     methods: {
         toggleEditMode() {
-            this.$parent.toggleEditMode();
+            this.readonly = !this.readonly;
+            console.log(this.localUser);
+        },
+        async fetchUpdatedUser() {
+            this.readonly = !this.readonly;
+            try {
+                const response = await fetch(API_URL + '/update/' + this.user.user_id, {
+                    method: "PATCH",
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.localUser)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error fetching user data');
+                }
+
+                const data = await response.json();
+
+                if(!data.status){
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
+                swal.fire({
+                    icon: 'success',
+                    title: 'Actualización exitosa',
+                    text: 'Los datos se han actualizado correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    localStorage.setItem('user', JSON.stringify(data.data));
+                    window.location.reload();
+                })
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
         }
     }
 }
