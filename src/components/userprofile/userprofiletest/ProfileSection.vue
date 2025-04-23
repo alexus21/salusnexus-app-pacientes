@@ -259,7 +259,7 @@ export default {
         async fetchUpdatedUser() {
             this.readonly = !this.readonly;
             try {
-                const response = await fetch(API_URL + '/update/' + this.user.user_id, {
+                const response = await fetch(API_URL + '/patients/update/' + this.user.user_id, {
                     method: "PATCH",
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
