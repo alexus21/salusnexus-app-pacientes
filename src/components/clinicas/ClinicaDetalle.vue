@@ -395,7 +395,6 @@ export default {
                 }
 
                 this.schedules = data.data;
-                console.log(this.schedules);
             } catch (error) {
                 console.error("Error fetching schedules:", error);
             }

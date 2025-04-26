@@ -56,9 +56,9 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <h5>Razón de su visita (máximo 250 palabras):</h5>
+                        <h5>Razón de su visita: </h5>
                         <textarea id="exampleFormControlTextarea1" v-model="appointment_form.visit_reason" class="form-control"
-                                  rows="3" maxlength="200"></textarea>
+                                  rows="3" maxlength="500"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

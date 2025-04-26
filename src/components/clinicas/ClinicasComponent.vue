@@ -256,7 +256,6 @@ export default {
                 }
 
                 this.favorites = data.data;
-                console.log(this.favorites);
             } catch (error) {
                 console.error('Error al obtener favoritos:', error);
             }
