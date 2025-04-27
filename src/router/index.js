@@ -40,7 +40,7 @@ const routes = [
         component: ClinicasComponent,
         meta: {
             requiresAuth: true,
-            hideHeader: false
+            hideHeader: true
         }
     },
     {

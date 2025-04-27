@@ -1,162 +1,208 @@
 <template>
-    <div class="main-container">
-        <!-- Verification Banner -->
-        <div v-if="!isUserVerified" class="verification-banner">
-            <div class="verification-content">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <span>Tu cuenta aún no está verificada. Completa este paso para acceder a todas las funciones.</span>
-                <button @click="navigateToVerification" class="verification-button">Verificar ahora</button>
-            </div>
-        </div>
-
-        <!-- Cabecera con título y descripción -->
-        <div class="text-center mb-4 position-relative hero-section">
-            <div class="decorative-element decorative-element-1"></div>
-            <div class="decorative-element decorative-element-2"></div>
-            <h1 class="clinic-title display-5">Encuentra tu clínica ideal</h1>
-            <p class="clinic-description">
-                Descubre las mejores clínicas en El Salvador para tu atención médica personalizada
-            </p>
-
-            <!-- Filtros rápidos -->
-            <div class="quick-filters d-flex justify-content-center flex-wrap mt-4">
-                <div class="filter-tag">
-                    <i class="fas fa-certificate me-2"></i> Certificadas
-                </div>
-                <div class="filter-tag">
-                    <i class="fas fa-award me-2"></i> Premiadas
-                </div>
-                <div class="filter-tag">
-                    <i class="fas fa-bolt me-2"></i> Rápidas
-                </div>
-                <div class="filter-tag">
-                    <i class="fas fa-calendar-check me-2"></i> Disponibilidad
-                </div>
-            </div>
-        </div>
-
-        <!-- Buscador -->
-        <div class="search-container mb-4">
-            <div class="search-box-wrapper">
-                <div class="search-row">
-                    <div class="search-input-container">
-                    <span class="search-icon">
-                      <i class="fas fa-search"></i>
-                    </span>
-                        <input v-model="searchQuery"
-                               class="search-input"
-                               placeholder="Buscar clínica, especialidad o médico..."
-                               type="text">
+    <div>
+        <!-- Custom Header -->
+        <div class="custom-header">
+            <div class="container-fluid">
+                <div class="header-content">
+                    <!-- Logo section -->
+                    <div class="header-logo">
+                        <i class="fas fa-heartbeat text-primary me-2"></i>
+                        <span class="header-title">Salus Nexus</span>
                     </div>
-                    <div class="search-actions">
-                        <button class="filter-button" @click="showFilterDialog = true">
-                            <i class="fas fa-filter me-2"></i> Filtros
-                        </button>
-                        <button class="search-button" @click="searchClinics">Buscar</button>
+                    
+                    <!-- User profile section -->
+                    <div class="header-user">
+                        <div class="notification-icon me-3">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        
+                        <!-- Profile dropdown -->
+                        <div class="dropdown">
+                            <img 
+                                :src="userProfileImage" 
+                                class="profile-image dropdown-toggle" 
+                                id="profileDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                                alt="Perfil"
+                            >
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                <li>
+                                    <router-link to="/perfil" class="dropdown-item">
+                                        <i class="fas fa-user me-2"></i> Ir al perfil
+                                    </router-link>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" @click.prevent="logout">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filtrar por especialidad -->
-        <!-- <div class="specialty-filter mb-4">
-          <h3 class="filter-title">Filtrar por especialidad</h3>
-          <div class="specialty-chips">
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Medicina General' }" @click="filterBySpecialty('Medicina General')">
-              Medicina General
-            </div>
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Cardiología' }" @click="filterBySpecialty('Cardiología')">
-              Cardiología
-            </div>
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Medicina Interna' }" @click="filterBySpecialty('Medicina Interna')">
-              Medicina Interna
-            </div>
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Pediatría' }" @click="filterBySpecialty('Pediatría')">
-              Pediatría
-            </div>
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Neurología' }" @click="filterBySpecialty('Neurología')">
-              Neurología
-            </div>
-            <div class="specialty-chip" :class="{ active: activeSpecialty === 'Ginecología' }" @click="filterBySpecialty('Ginecología')">
-              Ginecología
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Pestañas de filtrado -->
-        <div class="filter-tabs mb-4">
-            <div class="tab-container">
-                <div :class="{ active: activeTab === 'todas' }" class="nav-tab" @click="setActiveTab('todas')">
-                    Todas
-                </div>
-                <div :class="{ active: activeTab === 'cercanas' }" class="nav-tab" @click="setActiveTab('cercanas')">
-                    Cercanas
-                </div>
-                <div :class="{ active: activeTab === 'populares' }" class="nav-tab" @click="setActiveTab('populares')">
-                    Populares
-                </div>
-                <div :class="{ active: activeTab === 'nuevas' }" class="nav-tab" @click="setActiveTab('nuevas')">
-                    Nuevas
-                </div>
-            </div>
-        </div>
-
-        <!-- Listado de clínicas -->
-        <div class="clinics-section mb-5">
-            <h2 class="section-title text-center mb-4">Clínicas Destacadas</h2>
-            <div class="row">
-                <div v-for="(clinic, index) in filteredClinicsList"
-                     :key="index"
-                     :data-aos-delay="index * 100"
-                     class="col-lg-4 col-md-6 mb-4"
-                     data-aos="fade-up">
-                    <clinic-card
-                        :clinic="clinic"
-                        @toggle-favorite="toggleFavorite(index, clinic)"
-                    />
+        <div class="main-container">
+            <!-- Verification Banner -->
+            <div v-if="!isUserVerified" class="verification-banner">
+                <div class="verification-content">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span>Tu cuenta aún no está verificada. Completa este paso para acceder a todas las funciones.</span>
+                    <button @click="navigateToVerification" class="verification-button">Verificar ahora</button>
                 </div>
             </div>
 
-            <!-- Estado vacío -->
-            <div v-if="clinicsList.length === 0" class="empty-state text-center py-5" data-aos="fade-up">
-                <i class="far fa-frown-open empty-icon"></i>
-                <h3 class="empty-title">No se encontraron clínicas</h3>
-                <p class="empty-description">
-                    Intenta ajustar tus filtros de búsqueda o prueba con otros términos
+            <!-- Cabecera con título y descripción -->
+            <div class="text-center mb-4 position-relative hero-section">
+                <div class="decorative-element decorative-element-1"></div>
+                <div class="decorative-element decorative-element-2"></div>
+                <h1 class="clinic-title display-5">Encuentra tu clínica ideal</h1>
+                <p class="clinic-description">
+                    Descubre las mejores clínicas en El Salvador para tu atención médica personalizada
                 </p>
-                <button class="btn btn-outline-primary" @click="resetFilters">
-                    <i class="fas fa-sync-alt me-2"></i> Reiniciar filtros
-                </button>
+
+                <!-- Filtros rápidos -->
+                <div class="quick-filters d-flex justify-content-center flex-wrap mt-4">
+                    <div class="filter-tag">
+                        <i class="fas fa-certificate me-2"></i> Certificadas
+                    </div>
+                    <div class="filter-tag">
+                        <i class="fas fa-award me-2"></i> Premiadas
+                    </div>
+                    <div class="filter-tag">
+                        <i class="fas fa-bolt me-2"></i> Rápidas
+                    </div>
+                    <div class="filter-tag">
+                        <i class="fas fa-calendar-check me-2"></i> Disponibilidad
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Paginación -->
-        <div class="pagination-container d-flex justify-content-center mb-4">
-            <nav aria-label="Paginación de clínicas">
-                <ul class="pagination">
-                    <li class="page-item">
-                        <a aria-label="Anterior" class="page-link" href="#">
-                            <span>Anterior</span>
-                        </a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a aria-label="Siguiente" class="page-link" href="#">
-                            <span>Siguiente</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+            <!-- Buscador -->
+            <div class="search-container mb-4">
+                <div class="search-box-wrapper">
+                    <div class="search-row">
+                        <div class="search-input-container">
+                        <span class="search-icon">
+                          <i class="fas fa-search"></i>
+                        </span>
+                            <input v-model="searchQuery"
+                                   class="search-input"
+                                   placeholder="Buscar clínica, especialidad o médico..."
+                                   type="text">
+                        </div>
+                        <div class="search-actions">
+                            <button class="filter-button" @click="showFilterDialog = true">
+                                <i class="fas fa-filter me-2"></i> Filtros
+                            </button>
+                            <button class="search-button" @click="searchClinics">Buscar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Diálogo de filtros -->
-        <filter-dialog
-            :show="showFilterDialog"
-            @close="showFilterDialog = false"
-            @apply-filters="handleApplyFilters"
-        />
+            <!-- Filtrar por especialidad -->
+            <!-- <div class="specialty-filter mb-4">
+              <h3 class="filter-title">Filtrar por especialidad</h3>
+              <div class="specialty-chips">
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Medicina General' }" @click="filterBySpecialty('Medicina General')">
+                  Medicina General
+                </div>
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Cardiología' }" @click="filterBySpecialty('Cardiología')">
+                  Cardiología
+                </div>
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Medicina Interna' }" @click="filterBySpecialty('Medicina Interna')">
+                  Medicina Interna
+                </div>
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Pediatría' }" @click="filterBySpecialty('Pediatría')">
+                  Pediatría
+                </div>
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Neurología' }" @click="filterBySpecialty('Neurología')">
+                  Neurología
+                </div>
+                <div class="specialty-chip" :class="{ active: activeSpecialty === 'Ginecología' }" @click="filterBySpecialty('Ginecología')">
+                  Ginecología
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Pestañas de filtrado -->
+            <div class="filter-tabs mb-4">
+                <div class="tab-container">
+                    <div :class="{ active: activeTab === 'todas' }" class="nav-tab" @click="setActiveTab('todas')">
+                        Todas
+                    </div>
+                    <!-- <div :class="{ active: activeTab === 'cercanas' }" class="nav-tab" @click="setActiveTab('cercanas')">
+                        Cercanas
+                    </div> -->
+                    <div :class="{ active: activeTab === 'populares' }" class="nav-tab" @click="setActiveTab('populares')">
+                        Populares
+                    </div>
+                    <div :class="{ active: activeTab === 'nuevas' }" class="nav-tab" @click="setActiveTab('nuevas')">
+                        Nuevas
+                    </div>
+                </div>
+            </div>
+
+            <!-- Listado de clínicas -->
+            <div class="clinics-section mb-5">
+                <h2 class="section-title text-center mb-4">Clínicas Destacadas</h2>
+                <div class="row">
+                    <div v-for="(clinic, index) in filteredClinicsList"
+                         :key="index"
+                         :data-aos-delay="index * 100"
+                         class="col-lg-4 col-md-6 mb-4"
+                         data-aos="fade-up">
+                        <clinic-card
+                            :clinic="clinic"
+                            @toggle-favorite="toggleFavorite(index, clinic)"
+                        />
+                    </div>
+                </div>
+
+                <!-- Estado vacío -->
+                <div v-if="clinicsList.length === 0" class="empty-state text-center py-5" data-aos="fade-up">
+                    <i class="far fa-frown-open empty-icon"></i>
+                    <h3 class="empty-title">No se encontraron clínicas</h3>
+                    <p class="empty-description">
+                        Intenta ajustar tus filtros de búsqueda o prueba con otros términos
+                    </p>
+                    <button class="btn btn-outline-primary" @click="resetFilters">
+                        <i class="fas fa-sync-alt me-2"></i> Reiniciar filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginación -->
+            <div class="pagination-container d-flex justify-content-center mb-4">
+                <nav aria-label="Paginación de clínicas">
+                    <ul class="pagination">
+                        <li class="page-item">
+                            <a aria-label="Anterior" class="page-link" href="#">
+                                <span>Anterior</span>
+                            </a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a aria-label="Siguiente" class="page-link" href="#">
+                                <span>Siguiente</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Diálogo de filtros -->
+            <filter-dialog
+                :show="showFilterDialog"
+                @close="showFilterDialog = false"
+                @apply-filters="handleApplyFilters"
+            />
+        </div>
     </div>
 </template>
 
@@ -168,7 +214,7 @@ import 'aos/dist/aos.css';
 import swal from "sweetalert2";
 
 const API_URL = process.env.VUE_APP_API_URL;
-// const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
+const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'ClinicasComponent',
@@ -180,6 +226,7 @@ export default {
         return {
             MIN_KILOMETRES: 10,
             isUserVerified: true, // Default to true until checked
+            userProfileImage: 'https://ui-avatars.com/api/?name=Usuario&background=0D8ABC&color=fff', // Default placeholder avatar
             searchQuery: '',
             showFilterDialog: false,
             activeFilters: {},
@@ -196,6 +243,7 @@ export default {
     },
     async mounted() {
         await this.checkUserVerificationStatus();
+        await this.loadUserProfileImage();
         await this.fetchClinics().then(async () => {
             this.calculateDistances();
             await this.fetchMyFavorites();
@@ -208,6 +256,26 @@ export default {
         });
     },
     methods: {
+        async loadUserProfileImage() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                if (userData && userData.profile_photo_path) {
+                    this.userProfileImage = `${API_URL_IMAGE}/${userData.profile_photo_path}`;
+                }
+            } catch (error) {
+                console.error('Error loading profile image:', error);
+            }
+        },
+        
+        logout() {
+            // Clear localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Redirect to login page
+            this.$router.push({ name: 'Login' });
+        },
+        
         async checkUserVerificationStatus() {
             try {
                 const userData = JSON.parse(localStorage.getItem('user'));
@@ -608,6 +676,85 @@ export default {
 </script>
 
 <style scoped>
+/* Custom Header Styles */
+.custom-header {
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 10px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    margin-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0d6efd;
+    margin-left: 5px;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #495057;
+    transition: color 0.3s ease;
+}
+
+.notification-icon:hover {
+    color: #0d6efd;
+}
+
+.profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    object-fit: cover;
+    border: 2px solid #f0f7ff;
+    transition: border-color 0.3s ease;
+}
+
+.profile-image:hover {
+    border-color: #0d6efd;
+}
+
+/* Make sure the dropdown menu has proper styling */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.dropdown-item {
+    padding: 8px 20px;
+    color: #495057;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f7ff;
+    color: #0d6efd;
+}
+
 /* Estilos principales */
 .main-container {
     width: 100%;
@@ -617,7 +764,7 @@ export default {
     margin-left: auto;
     margin-right: auto;
     background-color: #f8f9fa;
-    min-height: 100vh;
+    min-height: calc(100vh - 80px); /* Adjust for header height */
 }
 
 /* Elementos decorativos */
