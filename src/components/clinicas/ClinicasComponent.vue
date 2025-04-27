@@ -12,8 +12,9 @@
                     
                     <!-- User profile section -->
                     <div class="header-user">
-                        <div class="notification-icon me-3">
-                            <i class="fas fa-bell"></i>
+                        <div class="reviews-icon me-3" title="Calificar mis citas médicas" @click="navigateToReviews">
+                            <i class="fas fa-star"></i>
+                            <span class="reviews-text">Reseñas</span>
                         </div>
                         
                         <!-- Profile dropdown -->
@@ -705,6 +706,23 @@ export default {
             document.querySelectorAll('.specialty-chip').forEach(chip => {
                 chip.classList.remove('active');
             });
+        },
+        navigateToReviews() {
+            // Check if the route exists in the router
+            const reviewsRoute = this.$router.hasRoute('PatientReviews');
+            
+            if (reviewsRoute) {
+                this.$router.push({ name: 'PatientReviews' });
+            } else {
+                // Show a "coming soon" message if the route doesn't exist yet
+                swal.fire({
+                    title: 'Próximamente',
+                    text: 'La sección de reseñas estará disponible pronto. Aquí podrás calificar tus citas médicas con 1-5 estrellas.',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#0d6efd'
+                });
+            }
         }
     }
 };
@@ -746,15 +764,32 @@ export default {
     align-items: center;
 }
 
-.notification-icon {
-    font-size: 1.2rem;
+.reviews-icon {
+    font-size: 1rem;
     cursor: pointer;
     color: #495057;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    background-color: #f0f7ff;
+    padding: 6px 12px;
+    border-radius: 20px;
 }
 
-.notification-icon:hover {
+.reviews-icon i {
+    color: #ffc107;
+    margin-right: 6px;
+}
+
+.reviews-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.reviews-icon:hover {
     color: #0d6efd;
+    background-color: #e0eeff;
+    transform: translateY(-2px);
 }
 
 .profile-image {
