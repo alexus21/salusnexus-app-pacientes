@@ -18,7 +18,9 @@
                         
                         <!-- Profile dropdown -->
                         <div class="dropdown">
+                            <!-- Show profile image if available -->
                             <img 
+                                v-if="hasProfileImage"
                                 :src="userProfileImage" 
                                 class="profile-image dropdown-toggle" 
                                 id="profileDropdown" 
@@ -26,6 +28,16 @@
                                 aria-expanded="false"
                                 alt="Perfil"
                             >
+                            <!-- Show initials if no profile image -->
+                            <div 
+                                v-else
+                                class="profile-initials dropdown-toggle"
+                                id="profileDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                            >
+                                {{ userInitials }}
+                            </div>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                                 <li>
                                     <router-link to="/perfil" class="dropdown-item">
@@ -226,7 +238,9 @@ export default {
         return {
             MIN_KILOMETRES: 10,
             isUserVerified: true, // Default to true until checked
-            userProfileImage: 'https://ui-avatars.com/api/?name=Usuario&background=0D8ABC&color=fff', // Default placeholder avatar
+            hasProfileImage: false,
+            userProfileImage: '',
+            userData: null,
             searchQuery: '',
             showFilterDialog: false,
             activeFilters: {},
@@ -237,6 +251,19 @@ export default {
             filteredClinicsList: [],
             favorites: [],
         };
+    },
+    computed: {
+        userInitials() {
+            if (!this.userData) return '??';
+            
+            const firstName = this.userData.first_name || '';
+            const lastName = this.userData.last_name || '';
+            
+            const firstInitial = firstName.charAt(0).toUpperCase();
+            const lastInitial = lastName.charAt(0).toUpperCase();
+            
+            return firstInitial + lastInitial;
+        }
     },
     created() {
         this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
@@ -258,12 +285,19 @@ export default {
     methods: {
         async loadUserProfileImage() {
             try {
-                const userData = JSON.parse(localStorage.getItem('user'));
-                if (userData && userData.profile_photo_path) {
-                    this.userProfileImage = `${API_URL_IMAGE}/${userData.profile_photo_path}`;
+                if (!this.userData) {
+                    this.userData = JSON.parse(localStorage.getItem('user'));
+                }
+                
+                if (this.userData && this.userData.profile_photo_path) {
+                    this.userProfileImage = `${API_URL_IMAGE}/${this.userData.profile_photo_path}`;
+                    this.hasProfileImage = true;
+                } else {
+                    this.hasProfileImage = false;
                 }
             } catch (error) {
                 console.error('Error loading profile image:', error);
+                this.hasProfileImage = false;
             }
         },
         
@@ -278,9 +312,9 @@ export default {
         
         async checkUserVerificationStatus() {
             try {
-                const userData = JSON.parse(localStorage.getItem('user'));
-                if (userData) {
-                    this.isUserVerified = userData.verified || false;
+                this.userData = JSON.parse(localStorage.getItem('user'));
+                if (this.userData) {
+                    this.isUserVerified = this.userData.verified || false;
                     return;
                 }
                 
@@ -302,10 +336,11 @@ export default {
                     return;
                 }
 
-                this.isUserVerified = data.data.verified || false;
+                this.userData = data.data;
+                this.isUserVerified = this.userData.verified || false;
                 
                 // Update localStorage with fresh data
-                localStorage.setItem('user', JSON.stringify(data.data));
+                localStorage.setItem('user', JSON.stringify(this.userData));
             } catch (error) {
                 console.error('Error checking verification status:', error);
             }
@@ -733,6 +768,26 @@ export default {
 }
 
 .profile-image:hover {
+    border-color: #0d6efd;
+}
+
+.profile-initials {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid #f0f7ff;
+    transition: background-color 0.3s ease;
+}
+
+.profile-initials:hover {
+    background-color: #0b5ed7;
     border-color: #0d6efd;
 }
 
