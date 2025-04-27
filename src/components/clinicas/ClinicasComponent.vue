@@ -1,5 +1,14 @@
 <template>
     <div class="main-container">
+        <!-- Verification Banner -->
+        <div v-if="!isUserVerified" class="verification-banner">
+            <div class="verification-content">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span>Tu cuenta aún no está verificada. Completa este paso para acceder a todas las funciones.</span>
+                <button @click="navigateToVerification" class="verification-button">Verificar ahora</button>
+            </div>
+        </div>
+
         <!-- Cabecera con título y descripción -->
         <div class="text-center mb-4 position-relative hero-section">
             <div class="decorative-element decorative-element-1"></div>
@@ -170,7 +179,7 @@ export default {
     data() {
         return {
             MIN_KILOMETRES: 10,
-
+            isUserVerified: true, // Default to true until checked
             searchQuery: '',
             showFilterDialog: false,
             activeFilters: {},
@@ -186,6 +195,7 @@ export default {
         this.originalClinicsList = JSON.parse(JSON.stringify(this.clinicsList));
     },
     async mounted() {
+        await this.checkUserVerificationStatus();
         await this.fetchClinics().then(async () => {
             this.calculateDistances();
             await this.fetchMyFavorites();
@@ -198,6 +208,44 @@ export default {
         });
     },
     methods: {
+        async checkUserVerificationStatus() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                if (userData) {
+                    this.isUserVerified = userData.verified || false;
+                    return;
+                }
+                
+                // If user data is not in localStorage, fetch it from API
+                const response = await fetch(`${API_URL}/userprofile`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const data = await response.json();
+                if (!data.status) {
+                    return;
+                }
+
+                this.isUserVerified = data.data.verified || false;
+                
+                // Update localStorage with fresh data
+                localStorage.setItem('user', JSON.stringify(data.data));
+            } catch (error) {
+                console.error('Error checking verification status:', error);
+            }
+        },
+        
+        navigateToVerification() {
+            this.$router.push({ name: 'VerifyPatientAccount' });
+        },
         async fetchClinics() {
             const response = await fetch(API_URL + '/medical-clinics/view', {
                 method: 'GET',
@@ -1019,6 +1067,55 @@ export default {
 
     .section-title {
         font-size: 1.5rem;
+    }
+}
+
+/* Verification Banner */
+.verification-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    animation: slideDown 0.5s ease-out;
+}
+
+.verification-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.verification-button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.verification-button:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
 </style> 
