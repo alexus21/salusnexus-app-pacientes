@@ -1060,7 +1060,7 @@ export default {
 .search-button:hover {
     background-color: #0b5ed7;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, .25);
 }
 
 /* Filtro por especialidad */
