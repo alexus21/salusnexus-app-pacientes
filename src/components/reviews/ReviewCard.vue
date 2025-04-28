@@ -24,17 +24,36 @@
                             v-for="star in 5"
                             :key="star"
                             :class="[
-                'star-icon',
-                currentRating >= star ? 'fas fa-star' : 'far fa-star',
-                { 'fas fa-star-half-alt': isHalfStar(star) }
-              ]"
-                            @click="setRating(star)"
-                            @mouseover="hoverRating = star"
-                            @mouseleave="hoverRating = 0"
+                                'star-icon',
+                                currentRating >= star ? 'fas fa-star' : 'far fa-star',
+                                { 'fas fa-star-half-alt': isHalfStar(star) },
+                                { 'disabled': !isEditing && hasRating }
+                            ]"
+                            @click="isEditing || !hasRating ? setRating(star) : null"
+                            @mouseover="(isEditing || !hasRating) ? hoverRating = star : null"
+                            @mouseleave="(isEditing || !hasRating) ? hoverRating = 0 : null"
                         ></i>
                     </div>
                     <div class="rating-text" v-if="hasRating">{{ ratingText }}</div>
                 </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section" v-if="hasRating || isEditing">
+                <div class="comments-label">Tu comentario:</div>
+                <div v-if="!isEditing && appointment.comment && appointment.comment.trim() !== ''" class="comments-text">
+                    {{ appointment.comment }}
+                </div>
+                <div v-else-if="!isEditing" class="comments-empty">
+                    No has dejado ningún comentario
+                </div>
+                <textarea 
+                    v-if="isEditing"
+                    v-model="currentComment"
+                    class="comments-textarea"
+                    placeholder="Escribe un comentario sobre tu experiencia..."
+                    rows="3"
+                ></textarea>
             </div>
 
             <!-- Additional Info -->
@@ -58,8 +77,11 @@
             <button v-if="!hasRating" class="add-rating-btn" @click="focusOnRating">
                 <i class="fas fa-star"></i> Valorar
             </button>
-            <button v-else class="edit-rating-btn" @click="focusOnRating">
+            <button v-else-if="!isEditing" class="edit-rating-btn" @click="startEditing">
                 <i class="fas fa-edit"></i> Editar
+            </button>
+            <button v-else class="save-rating-btn" @click="saveRating">
+                <i class="fas fa-save"></i> Guardar
             </button>
         </div>
 
@@ -82,10 +104,19 @@ export default {
         }
     },
     data() {
+        // Asegurarse de que una cadena vacía se trate como null
+        const normalizedComment = this.appointment.comment && this.appointment.comment.trim() !== '' 
+            ? this.appointment.comment 
+            : '';
+        
         return {
             hoverRating: 0,
             currentRating: this.appointment.rating || 0,
-            showGallery: false
+            originalRating: this.appointment.rating || 0,
+            currentComment: normalizedComment,
+            originalComment: normalizedComment,
+            showGallery: false,
+            isEditing: false
         };
     },
     computed: {
@@ -118,8 +149,27 @@ export default {
         },
 
         setRating(rating) {
-            this.currentRating = rating;
-            this.$emit('update-rating', this.appointment.appointment_id, rating);
+            if (this.isEditing || !this.hasRating) {
+                this.currentRating = rating;
+            }
+        },
+
+        startEditing() {
+            this.isEditing = true;
+            this.originalRating = this.currentRating;
+            this.originalComment = this.currentComment;
+            this.focusOnRating();
+        },
+
+        saveRating() {
+            this.isEditing = false;
+            this.$emit('update-rating', this.appointment.appointment_id, this.currentRating, this.currentComment);
+        },
+
+        cancelEditing() {
+            this.isEditing = false;
+            this.currentRating = this.originalRating;
+            this.currentComment = this.originalComment;
         },
 
         /* eslint-disable */
@@ -263,6 +313,11 @@ export default {
     transition: all 0.2s ease;
 }
 
+.star-icon.disabled {
+    cursor: default;
+    opacity: 0.8;
+}
+
 .star-icon.fa-star {
     color: #FFC107;
 }
@@ -276,6 +331,50 @@ export default {
     font-size: 0.9rem;
     color: #6c757d;
     font-style: italic;
+}
+
+/* Comments Section */
+.comments-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.comments-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.comments-text {
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.comments-empty {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.comments-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 0.95rem;
+    color: #495057;
+    transition: all 0.3s ease;
+}
+
+.comments-textarea:focus {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
 }
 
 .appointment-info {
@@ -311,7 +410,8 @@ export default {
 
 .view-details-btn,
 .add-rating-btn,
-.edit-rating-btn {
+.edit-rating-btn,
+.save-rating-btn {
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -350,6 +450,15 @@ export default {
     background-color: #dee2e6;
 }
 
+.save-rating-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-rating-btn:hover {
+    background-color: #218838;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
     .image-container {
@@ -369,7 +478,8 @@ export default {
 
     .view-details-btn,
     .add-rating-btn,
-    .edit-rating-btn {
+    .edit-rating-btn,
+    .save-rating-btn {
         width: 100%;
         justify-content: center;
     }

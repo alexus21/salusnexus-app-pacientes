@@ -337,10 +337,16 @@ export default {
                     this.appointments = data.data;
 
                     // Process data - ensure all appointments have rating properties
-                    this.appointments = this.appointments.map(appointment => ({
-                        ...appointment,
-                        rating: appointment.rating || null
-                    }));
+                    this.appointments = this.appointments.map(appointment => {
+                        // Convertir cadenas vacías a null para consistencia
+                        const comment = appointment.comment === '' ? null : appointment.comment;
+                        
+                        return {
+                            ...appointment,
+                            rating: appointment.rating || null,
+                            comment: comment
+                        };
+                    });
                 }
             } catch (error) {
                 console.error('Error fetching appointments:', error);
@@ -357,26 +363,55 @@ export default {
             this.activeFilter = filterValue;
         },
 
-        updateRating(appointmentId, newRating) {
+        updateRating(appointmentId, newRating, comment) {
             // Find and update the appointment
             const index = this.appointments.findIndex(app => app.appointment_id === appointmentId);
             if (index !== -1) {
                 this.appointments[index].rating = newRating;
-                this.saveRating(appointmentId, newRating);
+                this.appointments[index].comment = comment;
+                this.saveRating(appointmentId, newRating, comment);
             }
         },
 
-        async saveRating(appointmentId, rating) {
+        /* eslint-disable */
+        async saveRating(appointmentId, rating, comment) {
             try {
                 // This would be a real API call in production
-                console.log(`Saving rating ${rating} for appointment ${appointmentId}`);
+                console.log(`Saving rating ${rating} and comment for appointment ${appointmentId}`);
+                
+                // Simulate API call for now
+                // In a real scenario, this would be an actual API endpoint
+                /*
+                const response = await fetch(`${API_URL}/appointments/rate`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                  },
+                  body: JSON.stringify({
+                    appointment_id: appointmentId,
+                    rating: rating,
+                    comment: comment
+                  })
+                });
+
+                if (!response.ok) {
+                  throw new Error('Failed to save rating');
+                }
+
+                const data = await response.json();
+                if (!data.status) {
+                  throw new Error(data.message || 'Failed to save rating');
+                }
+                */
             } catch (error) {
                 console.error('Error saving rating:', error);
                 // Revert the rating in case of error
                 const index = this.appointments.findIndex(app => app.appointment_id === appointmentId);
                 if (index !== -1) {
-                    // Restore previous rating
+                    // Restore previous rating and comment
                     this.appointments[index].rating = this.appointments[index].original_rating || null;
+                    this.appointments[index].comment = this.appointments[index].original_comment || null;
                 }
             }
         },
