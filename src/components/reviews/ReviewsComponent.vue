@@ -367,14 +367,21 @@ export default {
             // Find and update the appointment
             const index = this.appointments.findIndex(app => app.appointment_id === appointmentId);
             if (index !== -1) {
+                // Store original values in case we need to revert due to API error
+                const originalRating = this.appointments[index].rating;
+                const originalComment = this.appointments[index].comment;
+                
+                // Update UI
                 this.appointments[index].rating = newRating;
                 this.appointments[index].comment = comment;
-                this.saveRating(appointmentId, newRating, comment);
+                
+                // This would call the actual API in the future
+                this.saveRating(appointmentId, newRating, comment, originalRating, originalComment);
             }
         },
 
         /* eslint-disable */
-        async saveRating(appointmentId, rating, comment) {
+        async saveRating(appointmentId, rating, comment, originalRating, originalComment) {
             try {
                 // This would be a real API call in production
                 console.log(`Saving rating ${rating} and comment for appointment ${appointmentId}`);
@@ -410,8 +417,8 @@ export default {
                 const index = this.appointments.findIndex(app => app.appointment_id === appointmentId);
                 if (index !== -1) {
                     // Restore previous rating and comment
-                    this.appointments[index].rating = this.appointments[index].original_rating || null;
-                    this.appointments[index].comment = this.appointments[index].original_comment || null;
+                    this.appointments[index].rating = originalRating;
+                    this.appointments[index].comment = originalComment;
                 }
             }
         },

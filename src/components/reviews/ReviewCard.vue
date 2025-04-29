@@ -25,8 +25,7 @@
                             :key="star"
                             :class="[
                                 'star-icon',
-                                currentRating >= star ? 'fas fa-star' : 'far fa-star',
-                                { 'fas fa-star-half-alt': isHalfStar(star) },
+                                getStarClass(star),
                                 { 'disabled': !isEditing && hasRating }
                             ]"
                             @click="isEditing || !hasRating ? setRating(star) : null"
@@ -34,21 +33,21 @@
                             @mouseleave="(isEditing || !hasRating) ? hoverRating = 0 : null"
                         ></i>
                     </div>
-                    <div class="rating-text" v-if="hasRating">{{ ratingText }}</div>
+                    <div class="rating-text" v-if="hasAnyRating">{{ ratingText }}</div>
                 </div>
             </div>
 
             <!-- Comments Section -->
-            <div class="comments-section" v-if="hasRating || isEditing">
+            <div class="comments-section" v-if="hasAnyRating || isEditing">
                 <div class="comments-label">Tu comentario:</div>
                 <div v-if="!isEditing && appointment.comment && appointment.comment.trim() !== ''" class="comments-text">
                     {{ appointment.comment }}
                 </div>
-                <div v-else-if="!isEditing" class="comments-empty">
+                <div v-else-if="!isEditing && !tempRating" class="comments-empty">
                     No has dejado ningún comentario
                 </div>
                 <textarea 
-                    v-if="isEditing"
+                    v-if="isEditing || tempRating > 0"
                     v-model="currentComment"
                     class="comments-textarea"
                     placeholder="Escribe un comentario sobre tu experiencia..."
@@ -74,7 +73,7 @@
             <button class="view-details-btn" @click="viewClinicDetails">
                 <i class="fas fa-clinic-medical"></i> Ver Clínica
             </button>
-            <button v-if="!hasRating" class="add-rating-btn" @click="focusOnRating">
+            <button v-if="!hasRating" class="add-rating-btn" @click="tempRating > 0 ? saveRating() : focusOnRating()">
                 <i class="fas fa-star"></i> Valorar
             </button>
             <button v-else-if="!isEditing" class="edit-rating-btn" @click="startEditing">
@@ -112,6 +111,7 @@ export default {
         return {
             hoverRating: 0,
             currentRating: this.appointment.rating || 0,
+            tempRating: 0,
             originalRating: this.appointment.rating || 0,
             currentComment: normalizedComment,
             originalComment: normalizedComment,
@@ -121,7 +121,10 @@ export default {
     },
     computed: {
         hasRating() {
-            return this.currentRating > 0;
+            return this.appointment.rating > 0;
+        },
+        hasAnyRating() {
+            return this.appointment.rating > 0 || this.tempRating > 0;
         },
         clinicImageUrl() {
             if (this.appointment.facade_photo) {
@@ -139,7 +142,8 @@ export default {
                 'Satisfecho',
                 'Muy satisfecho'
             ];
-            return texts[Math.round(this.currentRating)] || '';
+            const effectiveRating = this.tempRating > 0 ? this.tempRating : this.currentRating;
+            return texts[Math.round(effectiveRating)] || '';
         }
     },
     methods: {
@@ -148,9 +152,18 @@ export default {
             return new Date(dateString).toLocaleDateString('es-ES', options);
         },
 
+        getStarClass(star) {
+            const effectiveRating = this.tempRating > 0 ? this.tempRating : this.currentRating;
+            return effectiveRating >= star ? 'fas fa-star' : 'far fa-star';
+        },
+
         setRating(rating) {
             if (this.isEditing || !this.hasRating) {
                 this.currentRating = rating;
+                
+                if (!this.hasRating) {
+                    this.tempRating = rating;
+                }
             }
         },
 
@@ -163,7 +176,12 @@ export default {
 
         saveRating() {
             this.isEditing = false;
-            this.$emit('update-rating', this.appointment.appointment_id, this.currentRating, this.currentComment);
+            if (this.tempRating > 0) {
+                this.$emit('update-rating', this.appointment.appointment_id, this.tempRating, this.currentComment);
+                this.tempRating = 0;
+            } else {
+                this.$emit('update-rating', this.appointment.appointment_id, this.currentRating, this.currentComment);
+            }
         },
 
         cancelEditing() {
