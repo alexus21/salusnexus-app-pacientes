@@ -70,17 +70,36 @@
 
         <!-- Card Footer -->
         <div class="review-card-footer">
-            <button class="view-details-btn" @click="viewClinicDetails">
+            <button class="view-details-btn" @click="viewClinicDetails" :disabled="isSaving">
                 <i class="fas fa-clinic-medical"></i> Ver Clínica
             </button>
-            <button v-if="!hasRating" class="add-rating-btn" @click="tempRating > 0 ? saveRating() : focusOnRating()">
-                <i class="fas fa-star"></i> Valorar
+            <button 
+                v-if="!hasRating" 
+                class="add-rating-btn" 
+                @click="tempRating > 0 ? saveRating() : focusOnRating()"
+                :disabled="isSaving"
+            >
+                <i v-if="!isSaving" class="fas fa-star"></i>
+                <i v-else class="fas fa-spinner fa-spin"></i>
+                {{ isSaving ? 'Guardando...' : 'Valorar' }}
             </button>
-            <button v-else-if="!isEditing" class="edit-rating-btn" @click="startEditing">
+            <button 
+                v-else-if="!isEditing" 
+                class="edit-rating-btn" 
+                @click="startEditing"
+                :disabled="isSaving"
+            >
                 <i class="fas fa-edit"></i> Editar
             </button>
-            <button v-else class="save-rating-btn" @click="saveRating">
-                <i class="fas fa-save"></i> Guardar
+            <button 
+                v-else 
+                class="save-rating-btn" 
+                @click="saveRating"
+                :disabled="isSaving"
+            >
+                <i v-if="!isSaving" class="fas fa-save"></i>
+                <i v-else class="fas fa-spinner fa-spin"></i>
+                {{ isSaving ? 'Guardando...' : 'Guardar' }}
             </button>
         </div>
 
@@ -116,7 +135,8 @@ export default {
             currentComment: normalizedComment,
             originalComment: normalizedComment,
             showGallery: false,
-            isEditing: false
+            isEditing: false,
+            isSaving: false
         };
     },
     computed: {
@@ -174,13 +194,36 @@ export default {
             this.focusOnRating();
         },
 
-        saveRating() {
-            this.isEditing = false;
-            if (this.tempRating > 0) {
-                this.$emit('update-rating', this.appointment.appointment_id, this.tempRating, this.currentComment);
-                this.tempRating = 0;
-            } else {
-                this.$emit('update-rating', this.appointment.appointment_id, this.currentRating, this.currentComment);
+        async saveRating() {
+            if (this.isSaving) return; // Prevent multiple submissions
+            
+            this.isSaving = true;
+            
+            try {
+                // Determine which rating to use
+                const ratingToSave = this.tempRating > 0 ? this.tempRating : this.currentRating;
+                
+                // Use null for empty comments
+                const commentToSave = this.currentComment && this.currentComment.trim() !== '' 
+                    ? this.currentComment 
+                    : null;
+                
+                // Emit the event for parent to handle API call
+                this.$emit('update-rating', this.appointment.appointment_id, ratingToSave, commentToSave);
+                
+                // Reset temp rating
+                if (this.tempRating > 0) {
+                    this.tempRating = 0;
+                }
+                
+                this.isEditing = false;
+            } catch (error) {
+                console.error('Error in saveRating:', error);
+            } finally {
+                // Delay turning off the saving state to improve UX
+                setTimeout(() => {
+                    this.isSaving = false;
+                }, 500);
             }
         },
 
@@ -448,6 +491,14 @@ export default {
 
 .view-details-btn:hover {
     background-color: #e0eeff;
+}
+
+.view-details-btn:disabled,
+.add-rating-btn:disabled,
+.edit-rating-btn:disabled,
+.save-rating-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .add-rating-btn {

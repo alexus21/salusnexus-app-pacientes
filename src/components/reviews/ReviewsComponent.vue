@@ -57,6 +57,14 @@
             </div>
         </div>
 
+        <!-- Notification Toast -->
+        <div v-if="notification.show" 
+             :class="['notification-toast', notification.type]"
+             @click="hideNotification">
+            <i :class="['fas', notification.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle']"></i>
+            <span>{{ notification.message }}</span>
+        </div>
+
         <div class="main-container">
             <!-- Page Title and Description -->
             <div class="reviews-header">
@@ -188,7 +196,13 @@ export default {
                 {label: 'Con Reseña', value: 'reviewed', icon: 'fas fa-star'},
                 {label: 'Sin Reseña', value: 'unreviewed', icon: 'fas fa-star-half-alt'},
                 {label: 'Recientes', value: 'recent', icon: 'fas fa-clock'}
-            ]
+            ],
+            notification: {
+                show: false,
+                message: '',
+                type: 'success', // or 'error'
+                timeout: null
+            }
         };
     },
     computed: {
@@ -380,37 +394,39 @@ export default {
             }
         },
 
-        /* eslint-disable */
         async saveRating(appointmentId, rating, comment, originalRating, originalComment) {
             try {
-                // This would be a real API call in production
-                console.log(`Saving rating ${rating} and comment for appointment ${appointmentId}`);
+                // Prepare the current datetime in ISO format
+                const review_datetime = new Date().toISOString();
                 
-                // Simulate API call for now
-                // In a real scenario, this would be an actual API endpoint
-                /*
-                const response = await fetch(`${API_URL}/appointments/rate`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                  },
-                  body: JSON.stringify({
-                    appointment_id: appointmentId,
-                    rating: rating,
-                    comment: comment
-                  })
+                // Send rating to the API
+                const response = await fetch(`${API_URL}/reviews/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        appointment_id: appointmentId,
+                        rating: rating,
+                        // Send null if comment is empty
+                        comment: comment && comment.trim() !== '' ? comment : null,
+                        review_datetime: review_datetime
+                    })
                 });
 
                 if (!response.ok) {
-                  throw new Error('Failed to save rating');
+                    throw new Error('Failed to save rating');
                 }
 
                 const data = await response.json();
                 if (!data.status) {
-                  throw new Error(data.message || 'Failed to save rating');
+                    throw new Error(data.message || 'Failed to save rating');
                 }
-                */
+                
+                // Successfully saved to API
+                this.showNotification('Tu valoración ha sido guardada exitosamente', 'success');
+                
             } catch (error) {
                 console.error('Error saving rating:', error);
                 // Revert the rating in case of error
@@ -420,6 +436,33 @@ export default {
                     this.appointments[index].rating = originalRating;
                     this.appointments[index].comment = originalComment;
                 }
+                
+                // Show error notification
+                this.showNotification('No se pudo guardar tu valoración. Por favor, intenta nuevamente.', 'error');
+            }
+        },
+
+        showNotification(message, type = 'success') {
+            // Clear any existing timeout
+            if (this.notification.timeout) {
+                clearTimeout(this.notification.timeout);
+            }
+            
+            // Set notification data
+            this.notification.message = message;
+            this.notification.type = type;
+            this.notification.show = true;
+            
+            // Auto hide after 5 seconds
+            this.notification.timeout = setTimeout(() => {
+                this.notification.show = false;
+            }, 5000);
+        },
+        
+        hideNotification() {
+            this.notification.show = false;
+            if (this.notification.timeout) {
+                clearTimeout(this.notification.timeout);
             }
         },
 
@@ -825,6 +868,71 @@ export default {
 
     .reviews-list {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Notification Toast */
+.notification-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1100;
+    min-width: 300px;
+    max-width: 450px;
+    animation: slideIn 0.3s ease forwards;
+}
+
+.notification-toast.success {
+    border-left: 4px solid #198754;
+}
+
+.notification-toast.success i {
+    color: #198754;
+}
+
+.notification-toast.error {
+    border-left: 4px solid #dc3545;
+}
+
+.notification-toast.error i {
+    color: #dc3545;
+}
+
+.notification-toast i {
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+
+.notification-toast span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 576px) {
+    .notification-toast {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        min-width: auto;
     }
 }
 </style> 
