@@ -121,8 +121,8 @@ export default {
                 appointment_date: "",
                 service_type: "",
                 visit_reason: "",
-                clinic_id: this.clinic.id,
-                patient_id: localStorage.getItem("user").patient_profile_id,
+                clinic_id: null,
+                patient_id: null,
             }
         };
     },
@@ -132,7 +132,14 @@ export default {
         }
     },
     async mounted() {
-        //
+        // Set the clinic_id from the prop
+        this.appointment_form.clinic_id = this.clinic.id;
+        
+        // Get patient_id from localStorage
+        const userData = JSON.parse(localStorage.getItem("user"));
+        if (userData && userData.patient_profile_id) {
+            this.appointment_form.patient_id = userData.patient_profile_id;
+        }
     },
     methods: {
         // Define your component's methods here
@@ -143,6 +150,22 @@ export default {
             return `${formattedHours}:${minutes} ${period}`;
         },
         open() {
+            // Reset form data
+            this.appointment_form.appointment_date = "";
+            this.appointment_form.service_type = "";
+            this.appointment_form.visit_reason = "";
+            
+            // Make sure clinic_id is properly set
+            this.appointment_form.clinic_id = this.clinic.id;
+            
+            // Get patient_id from localStorage
+            const userData = JSON.parse(localStorage.getItem("user"));
+            if (userData && userData.patient_profile_id) {
+                this.appointment_form.patient_id = userData.patient_profile_id;
+            }
+            
+            console.log('Opening appointment modal with clinic_id:', this.appointment_form.clinic_id);
+            
             const modal = new bootstrap.Modal(document.getElementById('addNewAppointmentModal'));
             modal.show();
         },
@@ -213,6 +236,51 @@ export default {
         // Fetch data from API
         async fetchAddNewAppointment(){
             try{
+                // Validate required fields
+                if (!this.appointment_form.appointment_date) {
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Por favor seleccione una fecha para la cita',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+                
+                if (!this.appointment_form.service_type) {
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Por favor seleccione el tipo de servicio',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+                
+                if (!this.appointment_form.clinic_id) {
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error con el ID de la clínica, por favor intente de nuevo',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    console.error('Missing clinic_id:', this.appointment_form);
+                    return;
+                }
+                
+                if (!this.appointment_form.patient_id) {
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error con el ID del paciente, por favor intente de nuevo',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    console.error('Missing patient_id:', this.appointment_form);
+                    return;
+                }
+                
+                console.log('Sending appointment request:', this.appointment_form);
+                
                 const response = await fetch(API_URL + "/appointments/add", {
                     method: 'POST',
                     headers: {
