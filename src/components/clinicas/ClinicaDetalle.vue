@@ -87,15 +87,11 @@
                             <div class="gallery-grid">
                                 <div class="gallery-main">
                                     <img :src="API_URL_IMAGE + '/' + clinic.facade_photo" :alt="clinic.clinic_name" class="rounded">
+                                    <div class="image-label">Fachada</div>
                                 </div>
                                 <div class="gallery-item">
-                                    <img src="/clinic/clinic_02.jpeg" alt="Imagen de clínica" class="rounded">
-                                </div>
-                                <div class="gallery-item position-relative">
-                                    <img src="/clinic/clinic_03.jpeg" alt="Imagen de clínica" class="rounded">
-                                    <div class="more-photos">
-                                        <span>+5 fotos</span>
-                                    </div>
+                                    <img :src="API_URL_IMAGE + '/' + clinic.waiting_room_photo" :alt="clinic.clinic_name" class="rounded">
+                                    <div class="image-label">Sala de espera</div>
                                 </div>
                             </div>
                         </div>
@@ -734,46 +730,54 @@ export default {
 /* Gallery */
 .gallery-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: repeat(2, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1rem;
     height: 320px;
+    padding: 1rem;
 }
 
-.gallery-main {
-    grid-row: span 2;
-    overflow: hidden;
-}
-
-.gallery-item, .gallery-main {
+.gallery-main, .gallery-item {
     position: relative;
     height: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
 }
 
-.gallery-item img, .gallery-main img {
+.gallery-main:hover, .gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.gallery-main img, .gallery-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
 }
 
-.gallery-item:hover img, .gallery-main:hover img {
+.gallery-main:hover img, .gallery-item:hover img {
     transform: scale(1.05);
 }
 
-.more-photos {
+.image-label {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    padding: 0.8rem 1rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
     color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 0.9rem;
     font-weight: 500;
-    cursor: pointer;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.gallery-main:hover .image-label, .gallery-item:hover .image-label {
+    padding-bottom: 1.2rem;
+    opacity: 1;
 }
 
 /* Description */
@@ -1046,12 +1050,13 @@ export default {
     
     .gallery-grid {
         grid-template-columns: 1fr;
-        grid-template-rows: 200px repeat(2, 120px);
+        grid-template-rows: 1fr 1fr;
         height: auto;
+        gap: 1rem;
     }
     
-    .gallery-main {
-        grid-row: 1;
+    .gallery-main, .gallery-item {
+        height: 220px;
     }
     
     .services-grid {
