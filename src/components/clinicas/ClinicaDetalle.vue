@@ -1,173 +1,199 @@
 <template>
-    <div class="container py-4">
-        <div class="row">
-            <!-- Breadcrumb -->
-            <div class="col-12 mb-4">
-                <nav aria-label="breadcrumb">
+    <div class="clinic-detail-page">
+        <!-- Hero Section with Background Overlay -->
+        <div class="clinic-hero" :style="`background-image: url('${API_URL_IMAGE}/${clinic.facade_photo}')`">
+            <div class="overlay"></div>
+            <div class="container position-relative">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="breadcrumb-container">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <router-link :to="{ name: 'loginHome' }">Clínicas</router-link>
+                            <router-link :to="{ name: 'loginHome' }">
+                                <i class="fas fa-home"></i> Clínicas
+                            </router-link>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">{{ clinic.clinic_name }}</li>
                     </ol>
                 </nav>
-            </div>
 
-            <!-- Encabezado de la clínica -->
-            <div class="col-12 mb-4">
-                <div class="clinic-header">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h1 class="clinic-name mb-2">{{ clinic.clinic_name }}</h1>
-                            <div class="clinic-meta">
-                                <div class="clinic-specialty mb-2">
-                                  <span class="specialty-badge" :class="getSpecialtyClass(clinic.speciality_name)">
-                                    {{ clinic.speciality_name }}
-                                  </span>
-                                </div>
-                                <div class="clinic-location mb-2">
-                                    <i class="fas fa-map-marker-alt me-2"></i>
-                                    {{ clinic.address }}, {{clinic.city_name}}
-                                </div>
-                                <div class="clinic-rating d-flex align-items-center mb-3">
-                                    <div class="stars me-2">
-                                        <i v-for="n in 5" :key="n"
-                                           :class="['fas', n <= Math.floor(clinic.rating) ? 'fa-star' : (n - 0.5 <= clinic.rating ? 'fa-star-half-alt' : 'far fa-star')]"></i>
-                                    </div>
-                                    <span class="rating-value">{{ clinic.rating }}</span>
-                                    <span class="text-muted ms-2">({{ clinic.reviewsCount }} valoraciones)</span>
-                                </div>
-                                <div class="clinic-badges">
-                                  <span v-for="(badge, idx) in clinic.badges" :key="idx" :class="['badge me-2', getBadgeClass(badge)]">
-                                    <i :class="getBadgeIcon(badge)" class="me-1"></i>
-                                    {{ badge }}
-                                  </span>
-                                </div>
-                            </div>
+                <!-- Loading State -->
+                <div v-if="loading" class="loading-container">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="text-light mt-3">Cargando información de la clínica...</p>
+                </div>
+
+                <!-- Error State -->
+                <div v-else-if="error" class="error-container">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        {{ error }}
+                    </div>
+                    <button class="btn btn-primary" @click="fetchClinic">
+                        <i class="fas fa-sync-alt me-2"></i> Reintentar
+                    </button>
+                </div>
+
+                <!-- Clinic Header Info -->
+                <div v-else class="clinic-hero-content">
+                    <div class="clinic-specialty">
+                        <span class="specialty-badge" :class="getSpecialtyClass(clinic.speciality_name)">
+                            {{ clinic.speciality_name }}
+                        </span>
+                    </div>
+                    <h1 class="clinic-name">{{ clinic.clinic_name }}</h1>
+                    <div class="clinic-meta">
+                        <div class="meta-item location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ clinic.address }}, {{clinic.city_name}}
                         </div>
-                        <div class="col-md-6">
-                            <div class="clinic-actions text-md-end mt-3 mt-md-0">
-                                <button class="btn btn-outline-primary me-2">
-                                    <i class="far fa-heart me-1"></i> Guardar
-                                </button>
-                                <button class="btn btn-primary" @click="openAppointmentModal">
-                                    <i class="fas fa-calendar-plus me-1"></i> Agendar cita
-                                </button>
+                        <div class="meta-item rating">
+                            <div class="stars">
+                                <i v-for="n in 5" :key="n"
+                                    :class="['fas', n <= Math.floor(clinic.rating) ? 'fa-star' : (n - 0.5 <= clinic.rating ? 'fa-star-half-alt' : 'far fa-star')]"></i>
                             </div>
+                            <span class="rating-value">{{ clinic.rating }}</span>
+                            <span class="reviews-count">({{ clinic.reviewsCount }} valoraciones)</span>
                         </div>
+                        <div class="clinic-badges">
+                            <span v-for="(badge, idx) in clinic.badges" :key="idx" :class="['badge', getBadgeClass(badge)]">
+                                <i :class="getBadgeIcon(badge)"></i>
+                                {{ badge }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="btn btn-light btn-icon">
+                            <i class="far fa-heart"></i>
+                            <span>Guardar</span>
+                        </button>
+                        <button class="btn btn-primary btn-icon" @click="openAppointmentModal">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Agendar cita</span>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Galería de imágenes -->
-            <div class="col-12 mb-4">
-                <div class="clinic-gallery">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <div class="gallery-main">
-                                <img :src="API_URL_IMAGE + '/' + clinic.facade_photo" :alt="clinic.clinic_name" class="img-fluid rounded">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="row g-3">
-                                <div class="col-md-12 col-6">
-                                    <div class="gallery-thumb">
-                                        <img src="/clinic/clinic_02.jpeg" alt="Imagen de clínica"
-                                             class="img-fluid rounded">
-                                    </div>
+        <div class="container py-5">
+            <!-- Main Content Area -->
+            <div class="row g-4" v-if="!loading && !error">
+                <div class="col-lg-8">
+                    <!-- Gallery Section -->
+                    <div class="card mb-4">
+                        <div class="card-body p-0">
+                            <div class="gallery-grid">
+                                <div class="gallery-main">
+                                    <img :src="API_URL_IMAGE + '/' + clinic.facade_photo" :alt="clinic.clinic_name" class="rounded">
                                 </div>
-                                <div class="col-md-12 col-6">
-                                    <div class="gallery-thumb position-relative">
-                                        <img src="/clinic/clinic_03.jpeg" alt="Imagen de clínica"
-                                             class="img-fluid rounded">
-                                        <div class="more-photos">
-                                            <span>+5 fotos</span>
-                                        </div>
-                                    </div>
+                                <div class="gallery-item">
+                                    <img src="/clinic/clinic_02.jpeg" alt="Imagen de clínica" class="rounded">
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Información principal y estadísticas -->
-            <div class="col-lg-8 mb-4">
-                <div class="clinic-info card">
-                    <div class="card-body">
-                        <h2 class="card-title">Acerca de la clínica</h2>
-                        <p class="clinic-description">
-                            {{ clinic.description }}
-                        </p>
-
-                        <h3 class="section-title mt-4">Servicios</h3>
-                        <div class="clinic-services">
-                            <div class="row">
-                                <div v-for="(service, idx) in clinic.services" :key="idx"
-                                     class="col-md-6 col-lg-4 mb-3">
-                                    <div class="service-item">
-                                        <i class="fas fa-check-circle text-success me-2"></i>
-                                        {{ service }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3 class="section-title mt-4">Horarios de atención</h3>
-                        <div class="clinic-schedule">
-                            <div class="row">
-                                <div v-for="schedule in schedules" :key="schedule.id" class="col-md-6">
-                                    <div class="schedule-item d-flex justify-content-between">
-                                        <span class="badge bg-primary">{{ schedule.day_of_the_week }}</span>
-                                        Desde {{ formatTime(schedule.start_time) }} hasta {{ formatTime(schedule.end_time) }}
+                                <div class="gallery-item position-relative">
+                                    <img src="/clinic/clinic_03.jpeg" alt="Imagen de clínica" class="rounded">
+                                    <div class="more-photos">
+                                        <span>+5 fotos</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Sidebar con estadísticas y contacto -->
-            <div class="col-lg-4 mb-4">
-                <div class="clinic-sidebar">
+                    
+                    <!-- About Section -->
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h3 class="card-title">Estadísticas</h3>
-                            <div class="clinic-stats">
-                                <div class="stat-item d-flex align-items-center mb-3">
-                                    <div class="stat-icon bg-light-blue">
-                                        <i class="fas fa-user-md text-blue"></i>
+                            <div class="section-heading">
+                                <h2>Acerca de la clínica</h2>
+                            </div>
+                            <p class="clinic-description">
+                                {{ clinic.description }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Services Section -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="section-heading">
+                                <h2>Servicios</h2>
+                            </div>
+                            <div class="services-grid">
+                                <div v-for="(service, idx) in clinic.services" :key="idx" class="service-item">
+                                    <div class="service-icon">
+                                        <i class="fas fa-check-circle"></i>
                                     </div>
-                                    <div class="stat-info">
-                                        <div class="stat-value">{{ clinic.doctors }}</div>
-                                        <div class="stat-label">Médicos</div>
+                                    <div class="service-text">{{ service }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Schedule Section -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="section-heading">
+                                <h2>Horarios de atención</h2>
+                            </div>
+                            <div class="schedule-grid">
+                                <div v-for="schedule in schedules" :key="schedule.id" class="schedule-item">
+                                    <div class="day-badge">{{ schedule.day_of_the_week }}</div>
+                                    <div class="schedule-time">
+                                        <i class="far fa-clock"></i>
+                                        {{ formatTime(schedule.start_time) }} - {{ formatTime(schedule.end_time) }}
                                     </div>
                                 </div>
-                                <div class="stat-item d-flex align-items-center mb-3">
-                                    <div class="stat-icon bg-light-green">
-                                        <i class="fas fa-users text-green"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Stats Card -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="section-heading">
+                                <h2>Estadísticas</h2>
+                            </div>
+                            <div class="stats-container">
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-calendar-check"></i>
                                     </div>
-                                    <div class="stat-info">
-                                        <div class="stat-value">+{{ clinic.patients }}</div>
-                                        <div class="stat-label">Pacientes atendidos</div>
-                                    </div>
-                                </div>
-                                <div class="stat-item d-flex align-items-center mb-3">
-                                    <div class="stat-icon bg-light-purple">
-                                        <i class="fas fa-calendar-check text-purple"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <div class="stat-value">{{ clinic.years_of_experience }}</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number">{{ clinic.years_of_experience }}</div>
                                         <div class="stat-label">Años de experiencia</div>
                                     </div>
                                 </div>
-                                <div class="stat-item d-flex align-items-center">
-                                    <div class="stat-icon bg-light-orange">
-                                        <i class="fas fa-clinic-medical text-orange"></i>
+                                
+                                <div v-if="clinic.doctors" class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-user-md"></i>
                                     </div>
-                                    <div class="stat-info">
-                                        <div class="stat-value">{{ clinic.specialtiesCount }}</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number">{{ clinic.doctors }}</div>
+                                        <div class="stat-label">Médicos</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="clinic.patients" class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number">+{{ clinic.patients }}</div>
+                                        <div class="stat-label">Pacientes atendidos</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="clinic.specialtiesCount" class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-stethoscope"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number">{{ clinic.specialtiesCount }}</div>
                                         <div class="stat-label">Especialidades</div>
                                     </div>
                                 </div>
@@ -175,59 +201,67 @@
                         </div>
                     </div>
 
+                    <!-- Contact Card -->
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h3 class="card-title">Contacto</h3>
-                            <div class="contact-info">
-                                <div class="contact-item d-flex align-items-center mb-3">
+                            <div class="section-heading">
+                                <h2>Contacto</h2>
+                            </div>
+                            <ul class="contact-list">
+                                <li class="contact-item">
                                     <div class="contact-icon">
                                         <i class="fas fa-phone"></i>
                                     </div>
-                                    <div class="contact-detail">
-                                        {{ clinic.phone }}
+                                    <div class="contact-content">
+                                        <a :href="`tel:${clinic.phone}`">{{ clinic.phone }}</a>
                                     </div>
-                                </div>
-                                <div class="contact-item d-flex align-items-center mb-3">
+                                </li>
+                                <li class="contact-item">
                                     <div class="contact-icon">
                                         <i class="fas fa-envelope"></i>
                                     </div>
-                                    <div class="contact-detail">
-                                        {{ clinic.email }}
+                                    <div class="contact-content">
+                                        <a :href="`mailto:${clinic.email}`">{{ clinic.email }}</a>
                                     </div>
-                                </div>
-                                <div class="contact-item d-flex align-items-center">
+                                </li>
+                                <li v-if="clinic.website" class="contact-item">
                                     <div class="contact-icon">
                                         <i class="fas fa-globe"></i>
                                     </div>
-                                    <div class="contact-detail">
-                                        <a :href="clinic.website" target="_blank"
-                                           rel="noopener noreferrer">{{ clinic.website || '' }}</a>
+                                    <div class="contact-content">
+                                        <a :href="clinic.website" target="_blank" rel="noopener noreferrer">
+                                            {{ clinic.website }}
+                                        </a>
                                     </div>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 
+                    <!-- Location Card -->
                     <div class="card">
                         <div class="card-body">
-                            <h3 class="card-title">Ubicación</h3>
-                            <div class="clinic-map rounded">
-                                <div class="map-placeholder d-flex justify-content-center align-items-center">
+                            <div class="section-heading">
+                                <h2>Ubicación</h2>
+                            </div>
+                            <div class="location-map">
+                                <div class="map-placeholder">
                                     <i class="fas fa-map-marked-alt"></i>
                                     <span>Mapa no disponible</span>
                                 </div>
                             </div>
-                            <div class="clinic-address mt-3">
-                                <i class="fas fa-map-marker-alt me-2"></i>
-                                {{ clinic.fullAddress }}
+                            <div class="location-address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ clinic.fullAddress }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <AddAppointment ref="addNewAppointmentModal" :clinic="clinic" :schedules="schedules" />
         </div>
+
+        <!-- Appointment Modal -->
+        <AddAppointment ref="addNewAppointmentModal" :clinic="clinic" :schedules="schedules" />
     </div>
 </template>
 
@@ -411,171 +445,320 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos generales */
-.container {
-    max-width: 1200px;
+/* General Styles */
+.clinic-detail-page {
+    background-color: #f8f9fa;
+    color: #212529;
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Hero Section */
+.clinic-hero {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 400px;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 2rem;
+    color: white;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.8));
+    z-index: 1;
+}
+
+.clinic-hero .container {
+    position: relative;
+    z-index: 2;
 }
 
 /* Breadcrumb */
+.breadcrumb-container {
+    padding-top: 1.5rem;
+}
+
 .breadcrumb {
     background-color: transparent;
     padding: 0;
+    margin-bottom: 2rem;
 }
 
 .breadcrumb-item a {
-    color: #0d6efd;
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: white;
 }
 
 .breadcrumb-item.active {
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.7);
 }
 
-/* Encabezado de la clínica */
-.clinic-header {
-    margin-bottom: 20px;
+.breadcrumb-item+.breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Loading & Error States */
+.loading-container, .error-container {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+/* Hero Content */
+.clinic-hero-content {
+    max-width: 800px;
 }
 
 .clinic-name {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    color: #1a2b48;
+    margin-bottom: 1rem;
+    color: white;
 }
 
-.specialty-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
+.clinic-meta {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
 }
 
-.specialty-blue {
-    background-color: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
-}
-
-.specialty-red {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-}
-
-.specialty-green {
-    background-color: rgba(25, 135, 84, 0.1);
-    color: #198754;
-}
-
-.specialty-orange {
-    background-color: rgba(253, 126, 20, 0.1);
-    color: #fd7e14;
-}
-
-.specialty-purple {
-    background-color: rgba(111, 66, 193, 0.1);
-    color: #6f42c1;
-}
-
-.specialty-pink {
-    background-color: rgba(214, 51, 132, 0.1);
-    color: #d63384;
-}
-
-.clinic-location {
-    color: #6c757d;
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.95rem;
 }
 
-.clinic-rating {
-    margin-bottom: 15px;
+.meta-item i {
+    color: rgba(255, 255, 255, 0.8);
 }
 
-.stars i {
-    color: #ffc107;
-    font-size: 0.9rem;
+.meta-item.rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stars {
+    display: flex;
+    color: #FFD700;
+    font-size: 1rem;
 }
 
 .rating-value {
     font-weight: 600;
-    color: #1a2b48;
+    font-size: 1rem;
+}
+
+.reviews-count {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.clinic-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .badge {
-    padding: 6px 12px;
-    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
     font-weight: 500;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
 }
 
-.badge-certified {
-    background-color: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
-.badge-popular {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-}
-
-.badge-recommended {
-    background-color: rgba(25, 135, 84, 0.1);
-    color: #198754;
-}
-
-.badge-new {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-}
-
-/* Botones de acción */
-.clinic-actions .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
+.btn-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    font-weight: 500;
     transition: all 0.3s ease;
 }
 
-.btn-outline-primary {
-    color: #0d6efd;
-    border-color: #0d6efd;
+.btn-light {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #444;
+    border: none;
 }
 
-.btn-outline-primary:hover {
-    background-color: #0d6efd;
-    color: white;
+.btn-light:hover {
+    background-color: white;
+    transform: translateY(-2px);
 }
 
 .btn-primary {
     background-color: #0d6efd;
-    border-color: #0d6efd;
+    border: none;
 }
 
 .btn-primary:hover {
     background-color: #0b5ed7;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
 }
 
-/* Galería de imágenes */
-.clinic-gallery {
-    margin-bottom: 30px;
+/* Specialty Badge */
+.specialty-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
 }
 
-.gallery-main img,
-.gallery-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
+.specialty-blue {
+    background-color: rgba(13, 110, 253, 0.8);
+}
+
+.specialty-red {
+    background-color: rgba(220, 53, 69, 0.8);
+}
+
+.specialty-green {
+    background-color: rgba(25, 135, 84, 0.8);
+}
+
+.specialty-orange {
+    background-color: rgba(253, 126, 20, 0.8);
+}
+
+.specialty-purple {
+    background-color: rgba(111, 66, 193, 0.8);
+}
+
+.specialty-pink {
+    background-color: rgba(214, 51, 132, 0.8);
+}
+
+.specialty-default {
+    background-color: rgba(108, 117, 125, 0.8);
+}
+
+/* Badge classes */
+.badge-certified {
+    background-color: rgba(13, 110, 253, 0.8);
+}
+
+.badge-popular {
+    background-color: rgba(255, 193, 7, 0.8);
+}
+
+.badge-recommended {
+    background-color: rgba(25, 135, 84, 0.8);
+}
+
+.badge-new {
+    background-color: rgba(220, 53, 69, 0.8);
+}
+
+.badge-default {
+    background-color: rgba(108, 117, 125, 0.8);
+}
+
+/* Cards Styling */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.section-heading {
+    margin-bottom: 1.2rem;
+    position: relative;
+}
+
+.section-heading h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0;
+    position: relative;
+    display: inline-block;
+}
+
+.section-heading h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.5rem;
+    width: 40px;
+    height: 3px;
+    background-color: #0d6efd;
+    border-radius: 3px;
+}
+
+/* Gallery */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0.5rem;
+    height: 320px;
 }
 
 .gallery-main {
-    height: 300px;
+    grid-row: span 2;
     overflow: hidden;
 }
 
-.gallery-thumb {
-    height: 145px;
-    overflow: hidden;
+.gallery-item, .gallery-main {
     position: relative;
+    height: 100%;
+}
+
+.gallery-item img, .gallery-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.gallery-item:hover img, .gallery-main:hover img {
+    transform: scale(1.05);
 }
 
 .more-photos {
@@ -590,172 +773,205 @@ export default {
     justify-content: center;
     align-items: center;
     font-weight: 500;
-    border-radius: 8px;
+    cursor: pointer;
 }
 
-/* Tarjetas de información */
-.card {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: none;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1a2b48;
-    margin-bottom: 20px;
-    position: relative;
-    padding-bottom: 10px;
-}
-
-.card-title::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 40px;
-    height: 3px;
-    background-color: #0d6efd;
-    border-radius: 3px;
-}
-
-/* Detalles de la clínica */
+/* Description */
 .clinic-description {
     color: #6c757d;
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 1rem;
 }
 
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1a2b48;
-    margin-bottom: 15px;
+/* Services */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
 }
 
 .service-item {
-    padding: 8px 0;
-    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
 }
 
-.service-item i {
-    color: #198754;
+.service-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
 }
 
-.schedule-item {
-    padding: 8px 0;
-    color: #495057;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.schedule-item:last-child {
-    border-bottom: none;
-}
-
-.day {
-    font-weight: 500;
-}
-
-.hours {
-    color: #6c757d;
-}
-
-/* Estadísticas en el sidebar */
-.stat-item {
-    margin-bottom: 15px;
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+.service-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 15px;
-    transition: all 0.3s ease;
-}
-
-.stat-icon i {
-    font-size: 1.25rem;
-}
-
-.bg-light-blue {
-    background: linear-gradient(145deg, #E0F2FE, #dceefb);
-}
-
-.text-blue {
-    color: #0d6efd;
-}
-
-.bg-light-green {
-    background: linear-gradient(145deg, #DCFCE7, #d2f5de);
-}
-
-.text-green {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(25, 135, 84, 0.1);
     color: #198754;
 }
 
-.bg-light-purple {
-    background: linear-gradient(145deg, #EDE9FE, #e5e1fa);
+.service-text {
+    font-size: 0.95rem;
+    color: #495057;
 }
 
-.text-purple {
-    color: #6f42c1;
+/* Schedule */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
 }
 
-.bg-light-orange {
-    background: linear-gradient(145deg, #FFF7ED, #fff1e1);
+.schedule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    transition: all 0.2s ease;
 }
 
-.text-orange {
-    color: #fd7e14;
+.schedule-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
 }
 
-.stat-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1a2b48;
+.day-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.schedule-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+/* Stats */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.2rem 0.8rem;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.stat-card:hover {
+    background-color: #0d6efd;
+    color: white;
+    transform: translateY(-5px);
+}
+
+.stat-card:hover .stat-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.stat-card:hover .stat-number,
+.stat-card:hover .stat-label {
+    color: white;
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+    transition: all 0.3s ease;
 }
 
 .stat-label {
     font-size: 0.85rem;
     color: #6c757d;
+    transition: all 0.3s ease;
 }
 
-/* Información de contacto */
+/* Contact list */
+.contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
 .contact-item {
-    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.contact-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
 }
 
 .contact-icon {
-    width: 36px;
-    height: 36px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(13, 110, 253, 0.1);
     color: #0d6efd;
 }
 
-.contact-detail {
+.contact-content a {
     color: #495057;
-}
-
-.contact-detail a {
-    color: #0d6efd;
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-/* Mapa */
-.clinic-map {
+.contact-content a:hover {
+    color: #0d6efd;
+}
+
+/* Location */
+.location-map {
     height: 180px;
     background-color: #f8f9fa;
-    margin-bottom: 10px;
+    border-radius: 10px;
+    margin-bottom: 1rem;
     overflow: hidden;
 }
 
@@ -767,7 +983,8 @@ export default {
     justify-content: center;
     align-items: center;
     color: #6c757d;
-    gap: 10px;
+    gap: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .map-placeholder i {
@@ -775,35 +992,101 @@ export default {
     color: #0d6efd;
 }
 
-.clinic-address {
+.location-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    color: #495057;
     font-size: 0.9rem;
-    color: #6c757d;
+    padding: 0.5rem;
 }
 
-/* Responsividad */
-@media (max-width: 992px) {
-    .gallery-main {
-        height: 250px;
-    }
+.location-address i {
+    color: #0d6efd;
+    margin-top: 0.2rem;
+}
 
-    .gallery-thumb {
-        height: 120px;
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .clinic-name {
+        font-size: 2rem;
+    }
+    
+    .gallery-grid {
+        height: 280px;
+    }
+    
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
+    .clinic-hero {
+        min-height: 300px;
+    }
+    
+    .clinic-name {
+        font-size: 1.8rem;
+    }
+    
+    .meta-item {
+        font-size: 0.9rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 200px repeat(2, 120px);
+        height: auto;
+    }
+    
+    .gallery-main {
+        grid-row: 1;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .schedule-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .clinic-hero {
+        min-height: 250px;
+    }
+    
     .clinic-name {
         font-size: 1.5rem;
     }
-
-    .clinic-actions {
-        text-align: left;
-        margin-top: 20px;
+    
+    .specialty-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
     }
-
-    .gallery-main {
-        height: 200px;
-        margin-bottom: 15px;
+    
+    .badge {
+        font-size: 0.7rem;
+    }
+    
+    .section-heading h2 {
+        font-size: 1.2rem;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr 1fr;
     }
 }
 </style> 
