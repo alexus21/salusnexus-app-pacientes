@@ -48,14 +48,14 @@
                             <i class="fas fa-map-marker-alt"></i>
                             {{ clinic.address }}, {{clinic.city_name}}
                         </div>
-                        <div class="meta-item rating">
+<!--                        <div class="meta-item rating">
                             <div class="stars">
                                 <i v-for="n in 5" :key="n"
                                     :class="['fas', n <= Math.floor(clinic.rating) ? 'fa-star' : (n - 0.5 <= clinic.rating ? 'fa-star-half-alt' : 'far fa-star')]"></i>
                             </div>
                             <span class="rating-value">{{ clinic.rating }}</span>
                             <span class="reviews-count">({{ clinic.reviewsCount }} valoraciones)</span>
-                        </div>
+                        </div>-->
                         <div class="clinic-badges">
                             <span v-for="(badge, idx) in clinic.badges" :key="idx" :class="['badge', getBadgeClass(badge)]">
                                 <i :class="getBadgeIcon(badge)"></i>
@@ -68,7 +68,10 @@
                             <i class="far fa-heart"></i>
                             <span>Guardar</span>
                         </button>
-                        <button class="btn btn-primary btn-icon" @click="openAppointmentModal">
+                        <button 
+                            v-if="clinic.subscription_type !== 'profesional_gratis'"
+                            class="btn btn-primary btn-icon" 
+                            @click="openAppointmentModal">
                             <i class="fas fa-calendar-plus"></i>
                             <span>Agendar cita</span>
                         </button>

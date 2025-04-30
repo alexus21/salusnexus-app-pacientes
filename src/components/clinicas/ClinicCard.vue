@@ -34,25 +34,25 @@
                     {{ clinic.address }}, {{clinic.city_name}}
                 </div>
 
-                <div class="clinic-stats d-flex gap-3 mb-3">
-                    <!-- <div class="stat-item">
-                    <i class="fas fa-user-md text-primary me-1"></i>
-                    {{ clinic.doctors }} médicos
-                    </div> -->
-                    <div class="stat-item">
-                        <i class="fas fa-users text-success me-1"></i>
-                        {{ clinic.patients }}+ pacientes
-                    </div>
-                </div>
+<!--                <div class="clinic-stats d-flex gap-3 mb-3">-->
+<!--                    &lt;!&ndash; <div class="stat-item">-->
+<!--                    <i class="fas fa-user-md text-primary me-1"></i>-->
+<!--                    {{ clinic.doctors }} médicos-->
+<!--                    </div> &ndash;&gt;-->
+<!--                    <div class="stat-item">-->
+<!--                        <i class="fas fa-users text-success me-1"></i>-->
+<!--                        {{ clinic.patients }}+ pacientes-->
+<!--                    </div>-->
+<!--                </div>-->
 
-                <div class="clinic-rating d-flex align-items-center justify-content-between">
+<!--                <div class="clinic-rating d-flex align-items-center justify-content-between">
                     <div class="stars d-flex">
                         <template v-for="star in 5" :key="star">
                             <i :class="['star-icon', getStarClass(star)]"></i>
                         </template>
                     </div>
                     <span class="rating-value">{{ clinic.rating }}</span>
-                </div>
+                </div>-->
             </div>
 
             <div class="card-footer bg-white border-0 pt-0">

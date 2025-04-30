@@ -150,12 +150,12 @@
                     <!-- <div :class="{ active: activeTab === 'cercanas' }" class="nav-tab" @click="setActiveTab('cercanas')">
                         Cercanas
                     </div> -->
-                    <div :class="{ active: activeTab === 'populares' }" class="nav-tab" @click="setActiveTab('populares')">
+<!--                    <div :class="{ active: activeTab === 'populares' }" class="nav-tab" @click="setActiveTab('populares')">
                         Populares
                     </div>
                     <div :class="{ active: activeTab === 'nuevas' }" class="nav-tab" @click="setActiveTab('nuevas')">
                         Nuevas
-                    </div>
+                    </div>-->
                 </div>
             </div>
 
