@@ -120,7 +120,7 @@ export default {
     },
     methods: {
         handleRegisterClick() {
-            this.$router.push({name: 'Register'});
+            this.$router.push({name: 'SubscriptionPlans'});
         },
         handleLoginClick() {
             this.$router.push({name: 'Login'});
