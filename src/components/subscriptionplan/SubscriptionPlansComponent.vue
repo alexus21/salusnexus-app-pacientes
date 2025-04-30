@@ -18,7 +18,7 @@
                 :class="['toggle-option', { active: yearly }]"
             >
                 Anual
-                <span class="saving-badge" v-if="yearly">Ahorre 15%</span>
+                <span class="saving-badge" v-if="yearly">Ahorre {{ advancedPlanDiscount }}%</span>
             </button>
         </div>
 
@@ -56,7 +56,7 @@
                 </div>
                 <p class="plan-name">Plan profesional</p>
                 <div class="plan-pricing">
-                    <span class="plan-price">$5.99</span>
+                    <span class="plan-price">${{ advancedPlanMonthlyPrice }}</span>
                     <span class="plan-period">/ Por miembro</span>
                 </div>
                 <hr class="plan-divider">
@@ -81,7 +81,7 @@
                 </div>
                  <p class="plan-name">Plan profesional</p>
                  <div class="plan-pricing">
-                    <span class="plan-price">$60.99</span>
+                    <span class="plan-price">${{ advancedPlanYearlyPrice }}</span>
                     <span class="plan-period">/ Por miembro</span>
                 </div>
                 <hr class="plan-divider">
@@ -117,6 +117,7 @@
 
 <script>
 import SubscriptionFeatureItem from '@/components/subscriptionplan/SubscriptionFeatureItem.vue';
+import axios from 'axios';
 
 export default {
     name: 'SubscriptionPlansComponent',
@@ -135,34 +136,87 @@ export default {
     },
     data() {
         return {
-            basicPlanFeatures: [
-                'Creación de perfil básico',
-                'Acceso completo al directorio de profesionales',
-                'Publicar reseñas y calificar establecimientos',
-                'Agendar citas',
-                'Solicitar servicios a domicilio'
-            ],
-            advancedPlanFeatures: [
-                'Todas las ventajas del plan básico',
-                'Acceso a reseñas públicas de otros pacientes',
-                'Historial de citas',
-                'Soporte prioritario para la gestión de citas',
-                'Consejos de salud personalizados según perfil',
-                'Detalles de medicamentos recetados',
-                'Notificaciones de citas futuras',
-                'Recordatorios personalizados para ti'
-            ],
+            basicPlanFeatures: [],
+            advancedPlanFeatures: [],
             yearly: false,
             subscription_period: '',
             plan_info_free: 'Comenzar gratis',
             plan_info_pro: 'Comenzar prueba gratuita de 14 días',
             plan_info_yearly: 'Comenzar prueba gratuita de 14 días',
+            isLoading: true,
+            error: null,
+            advancedPlanMonthlyPrice: '5.99',
+            advancedPlanYearlyPrice: '60.99',
+            advancedPlanDiscount: '15'
         }
     },
     mounted() {
         this.handleButtonsMessages();
+        this.fetchSubscriptionPlans();
     },
     methods: {
+        async fetchSubscriptionPlans() {
+            try {
+                this.isLoading = true;
+                const response = await axios.get(`${process.env.VUE_APP_API_URL}/subscription-plans`);
+                
+                // Process the response
+                if (response.data && Array.isArray(response.data)) {
+                    // Find the basic plan (paciente_gratis)
+                    const basicPlan = response.data.find(plan => plan.subscription_type === 'paciente_gratis');
+                    if (basicPlan && basicPlan.features) {
+                        this.basicPlanFeatures = basicPlan.features.map(item => item.feature);
+                    }
+                    
+                    // Find the advanced plan (paciente_avanzado)
+                    const advancedPlan = response.data.find(plan => plan.subscription_type === 'paciente_avanzado');
+                    if (advancedPlan) {
+                        if (advancedPlan.features) {
+                            this.advancedPlanFeatures = advancedPlan.features.map(item => item.feature);
+                        }
+                        
+                        // Set prices and discount from API data
+                        if (advancedPlan.price_monthly) {
+                            this.advancedPlanMonthlyPrice = advancedPlan.price_monthly;
+                        }
+                        
+                        if (advancedPlan.price_annual) {
+                            this.advancedPlanYearlyPrice = advancedPlan.price_annual;
+                        }
+                        
+                        if (advancedPlan.discount_percent) {
+                            this.advancedPlanDiscount = parseFloat(advancedPlan.discount_percent).toFixed(0);
+                        }
+                    }
+                }
+                
+                this.isLoading = false;
+            } catch (error) {
+                console.error('Error fetching subscription plans:', error);
+                this.error = 'Error al cargar los planes de suscripción. Por favor, inténtalo de nuevo más tarde.';
+                this.isLoading = false;
+                
+                // Set fallback features in case of error
+                this.basicPlanFeatures = [
+                    'Creación de perfil básico',
+                    'Acceso completo al directorio de profesionales',
+                    'Publicar reseñas y calificar establecimientos',
+                    'Agendar citas',
+                    'Solicitar servicios a domicilio'
+                ];
+                
+                this.advancedPlanFeatures = [
+                    'Todas las ventajas del plan básico',
+                    'Acceso a reseñas públicas de otros pacientes',
+                    'Historial de citas',
+                    'Soporte prioritario para la gestión de citas',
+                    'Consejos de salud personalizados según perfil',
+                    'Detalles de medicamentos recetados',
+                    'Notificaciones de citas futuras',
+                    'Recordatorios personalizados para ti'
+                ];
+            }
+        },
         startFreePlan() {
             localStorage.setItem('selected_plan', 'gratis');
             localStorage.setItem('periodo', 'mensual');

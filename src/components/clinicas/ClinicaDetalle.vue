@@ -245,63 +245,46 @@ export default {
     data() {
         return {
             clinic: {
-                id: 1,
-                name: 'Clínica San Rafael',
-                specialty: 'Medicina General',
-                location: 'Col. Escalón, San Salvador',
-                fullAddress: 'Av. La Revolución #123, Col. Escalón, San Salvador, El Salvador',
-                doctors: 12,
-                patients: 1240,
-                rating: 4.8,
-                reviewsCount: 156,
-                yearsExperience: 15,
-                specialtiesCount: 5,
-                availability: 'Hoy',
-                image: '/clinic/clinic_01.jpeg',
-                phone: '+503 2222-3333',
-                email: 'contacto@clinicasanrafael.com',
-                website: 'www.clinicasanrafael.com',
-                badges: ['Certificada', 'Recomendada'],
-                description: 'Clínica San Rafael es un centro médico con más de 15 años de experiencia brindando servicios de salud de alta calidad. Contamos con médicos especialistas altamente capacitados y tecnología de vanguardia para ofrecer diagnósticos precisos y tratamientos efectivos. Nuestro objetivo es proporcionar atención médica integral y personalizada para el bienestar de nuestros pacientes.',
-                services: [
-                    'Consulta general',
-                    'Exámenes médicos',
-                    'Pediatría',
-                    'Ginecología',
-                    'Cardiología',
-                    'Dermatología',
-                    'Rayos X',
-                    'Ultrasonografía',
-                    'Laboratorio clínico'
-                ],
-                schedule: [
-                    {day: 'Lunes', hours: '7:00 - 19:00', closed: false},
-                    {day: 'Martes', hours: '7:00 - 19:00', closed: false},
-                    {day: 'Miércoles', hours: '7:00 - 19:00', closed: false},
-                    {day: 'Jueves', hours: '7:00 - 19:00', closed: false},
-                    {day: 'Viernes', hours: '7:00 - 19:00', closed: false},
-                    {day: 'Sábado', hours: '8:00 - 13:00', closed: false},
-                    {day: 'Domingo', hours: '', closed: true}
-                ]
+                id: null,
+                clinic_name: '',
+                speciality_name: '',
+                address: '',
+                city_name: '',
+                rating: 0,
+                reviewsCount: 0,
+                badges: [],
+                description: '',
+                services: [],
+                doctors: 0,
+                patients: 0,
+                years_of_experience: 0,
+                specialtiesCount: 0,
+                facade_photo: '',
+                phone: '',
+                email: '',
+                website: '',
+                fullAddress: ''
             },
             API_URL_IMAGE: API_URL_IMAGE,
             schedules: [],
+            loading: true,
+            error: null
         };
     },
-    mounted() {
-        // En una implementación real, aquí cargaríamos los datos de la clínica
-        // basados en el ID de la ruta
+    created() {
+        // Get clinic ID from route params
         const clinicId = this.$route.params.id;
-        console.log('ID de la clínica:', clinicId);
-        // Simularíamos una llamada a API: this.loadClinicData(clinicId);
-        this.fetchClinic().then(() => {
-            this.fetchSchedules();
-        });
+        
+        if (!clinicId) {
+            this.error = "ID de clínica no proporcionado";
+            this.loading = false;
+            return;
+        }
+        
+        // Fetch clinic data
+        this.fetchClinic();
     },
     methods: {
-        /*loadData(){
-            this.clinic = JSON.parse(localStorage.getItem('clinics'))[this.$route.params.id];
-        },*/
         formatTime(time) {
             const [hours, minutes] = time.split(':');
             const period = hours >= 12 ? 'PM' : 'AM';
@@ -309,27 +292,46 @@ export default {
             return `${formattedHours}:${minutes} ${period}`;
         },
         async fetchClinic() {
-            const response = await fetch(API_URL + '/medical-clinics/show/' + this.$route.params.id, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+            try {
+                this.loading = true;
+                
+                const clinicId = this.$route.params.id;
+                console.log('Fetching clinic with ID:', clinicId);
+                
+                const response = await fetch(`${API_URL}/medical-clinics/show/${clinicId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error de respuesta: ${response.status} ${response.statusText}`);
                 }
-            });
 
-            if (!response.ok) {
-                console.error('Error al obtener clínicas:', response.statusText);
-                return;
+                const data = await response.json();
+
+                if (!data.status) {
+                    throw new Error('Error en la respuesta API: ' + (data.message || 'Sin mensaje'));
+                }
+
+                this.clinic = data.data;
+                
+                // Set fullAddress if not provided by API
+                if (!this.clinic.fullAddress && this.clinic.address) {
+                    this.clinic.fullAddress = `${this.clinic.address}, ${this.clinic.city_name || ''}`;
+                }
+                
+                // Fetch schedules after clinic data loads successfully
+                this.fetchSchedules();
+                
+            } catch (error) {
+                console.error('Error al obtener datos de la clínica:', error);
+                this.error = `Error al cargar la clínica: ${error.message}`;
+            } finally {
+                this.loading = false;
             }
-
-            const data = await response.json();
-
-            if (!data.status) {
-                console.error('Error al obtener datos');
-                return;
-            }
-
-            this.clinic = data.data;
         },
         getSpecialtyClass(specialty) {
             const classes = {
@@ -375,7 +377,12 @@ export default {
         },
         async fetchSchedules() {
             try {
-                const response = await fetch(`${API_URL}/schedules/get/clinic/` + this.clinic.id, {
+                if (!this.clinic.id) {
+                    console.warn('No clinic ID available for fetching schedules');
+                    return;
+                }
+                
+                const response = await fetch(`${API_URL}/schedules/get/clinic/${this.clinic.id}`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -390,7 +397,7 @@ export default {
                 const data = await response.json();
 
                 if (!data.status) {
-                    console.log('Error', data);
+                    console.error('Error fetching schedules:', data);
                     return;
                 }
 

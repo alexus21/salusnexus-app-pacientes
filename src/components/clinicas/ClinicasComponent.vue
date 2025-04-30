@@ -12,7 +12,7 @@
                     
                     <!-- User profile section -->
                     <div class="header-user">
-                        <div class="reviews-icon me-3" title="Calificar mis citas médicas" @click="navigateToReviews">
+                        <div v-if="isUserVerified" class="reviews-icon me-3" title="Calificar mis citas médicas" @click="navigateToReviews">
                             <i class="fas fa-star"></i>
                             <span class="reviews-text">Reseñas</span>
                         </div>
@@ -40,7 +40,7 @@
                                 {{ userInitials }}
                             </div>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li>
+                                <li v-if="isUserVerified">
                                     <router-link to="/perfil" class="dropdown-item">
                                         <i class="fas fa-user me-2"></i> Ir al perfil
                                     </router-link>
