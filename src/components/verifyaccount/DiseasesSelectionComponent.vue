@@ -1,5 +1,12 @@
 <template>
     <div class="diseases-selection-page">
+        <!-- Elementos decorativos de fondo -->
+        <div class="decorative-element decorative-element-1"></div>
+        <div class="decorative-element decorative-element-2"></div>
+        <div class="decorative-element decorative-element-3"></div>
+        <div class="decorative-element decorative-element-4"></div>
+        <div class="decorative-element decorative-element-5"></div>
+        
         <div class="container">
             <div class="selection-card">
                 <div class="animated-header">
@@ -10,7 +17,7 @@
                     <p class="subtitle">Selecciona de 1 a 3 condiciones médicas que consideres relevantes para tu atención</p>
                 </div>
 
-                <div class="progress-container mb-4">
+                <div class="progress-container">
                     <div class="progress-bar" :style="{ width: progressWidth + '%' }"></div>
                     <div class="progress-text">{{ selectedDiseases.length }} de 3 seleccionadas</div>
                 </div>
@@ -64,12 +71,12 @@
                             <div class="selection-indicator">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="disease-icon" :class="getCategoryClass(disease.category)">
-                                <i :class="getCategoryIcon(disease.category)"></i>
+                            <div class="disease-icon" :class="getIconClass(disease.name)">
+                                <i :class="getIconForDisease(disease.name)"></i>
                             </div>
                             <div class="disease-details">
                                 <h3 class="disease-name">{{ disease.name }}</h3>
-                                <p class="disease-category">{{ disease.category }}</p>
+                                <p class="disease-category" v-if="disease.category">{{ disease.category }}</p>
                             </div>
                         </div>
 
@@ -81,9 +88,38 @@
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="selected-summary" v-if="selectedDiseases.length > 0">
-                        <h3>Condiciones seleccionadas:</h3>
+                <!-- Botón de volver que permanece en la parte principal -->
+                <div class="back-button-container">
+                    <button 
+                        @click="goBack" 
+                        class="btn btn-secondary btn-lg action-btn back-btn"
+                    >
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Volver</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Medical illustrations -->
+            <div class="medical-illustration">
+                <img src="/medical-icons.svg" alt="Íconos médicos" class="floating-img">
+            </div>
+        </div>
+
+        <!-- Nueva barra fija inferior para selecciones y botón guardar -->
+        <div class="fixed-selection-bar" :class="{'has-selections': selectedDiseases.length > 0}">
+            <div class="container selection-bar-container">
+                <div class="selection-bar-content">
+                    <div class="selection-counter">
+                        <div class="counter-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <span>{{ selectedDiseases.length }} de 3 seleccionadas</span>
+                    </div>
+                    
+                    <div class="selected-pills-container" v-if="selectedDiseases.length > 0">
                         <div class="selected-pills">
                             <div v-for="disease in selectedDiseases" :key="disease.id" class="selected-pill">
                                 <span>{{ disease.name }}</span>
@@ -93,19 +129,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="actions-container">
-                    <button 
-                        @click="goBack" 
-                        class="btn btn-secondary btn-lg action-btn back-btn"
-                    >
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Volver</span>
-                    </button>
+                    
                     <button 
                         @click="saveSelections" 
-                        class="btn btn-primary btn-lg action-btn"
+                        class="btn btn-primary btn-lg action-btn save-btn"
                         :disabled="selectedDiseases.length === 0"
                     >
                         <i class="fas fa-save"></i>
@@ -118,6 +145,8 @@
 </template>
 
 <script>
+import swal from 'sweetalert2';
+
 export default {
     name: 'DiseasesSelectionComponent',
     data() {
@@ -128,16 +157,21 @@ export default {
             searchTerm: '',
             loading: true,
             error: null,
-            categoryIcons: {
-                'Cardiovascular': 'fas fa-heart',
-                'Respiratorio': 'fas fa-lungs',
-                'Digestivo': 'fas fa-stomach',
-                'Neurológico': 'fas fa-brain',
-                'Endocrino': 'fas fa-weight',
-                'Inmunológico': 'fas fa-shield-virus',
-                'Dermatológico': 'fas fa-allergies',
-                'Oftalmológico': 'fas fa-eye',
-                'Otros': 'fas fa-notes-medical'
+            diseaseIcons: {
+                'Diabetes Tipo 1': { icon: 'fas fa-syringe', class: 'category-green' },
+                'Diabetes Tipo 2': { icon: 'fas fa-weight', class: 'category-green' },
+                'Hipertensión Arterial': { icon: 'fas fa-heart', class: 'category-red' },
+                'Asma': { icon: 'fas fa-lungs', class: 'category-blue' },
+                'Artritis Reumatoide': { icon: 'fas fa-bone', class: 'category-yellow' },
+                'Migraña': { icon: 'fas fa-brain', class: 'category-purple' },
+                'Enfermedad de Crohn': { icon: 'fas fa-stomach', class: 'category-orange' },
+                'Hipotiroidismo': { icon: 'fas fa-weight', class: 'category-green' },
+                'Psoriasis': { icon: 'fas fa-allergies', class: 'category-pink' },
+                'Glaucoma': { icon: 'fas fa-eye', class: 'category-teal' },
+                'Fibromialgia': { icon: 'fas fa-brain', class: 'category-purple' },
+                'Apnea del Sueño': { icon: 'fas fa-bed', class: 'category-blue' },
+                'Anemia': { icon: 'fas fa-tint', class: 'category-red' },
+                'default': { icon: 'fas fa-notes-medical', class: 'category-gray' }
             }
         };
     },
@@ -169,11 +203,17 @@ export default {
                 
                 const data = await response.json();
                 
-                // Simulando datos para desarrollo
-                if (!data || !data.length) {
-                    this.diseases = this.getMockDiseases();
+                // Verificar la estructura de la respuesta
+                if (!data.status) {
+                    throw new Error(data.message || 'Error al obtener las enfermedades');
+                }
+                
+                // Usar los datos de diseases del API
+                if (data.diseases && data.diseases.length > 0) {
+                    this.diseases = data.diseases;
                 } else {
-                    this.diseases = data;
+                    // Si no hay datos, usar mock data
+                    this.diseases = this.getMockDiseases();
                 }
                 
                 this.filteredDiseases = [...this.diseases];
@@ -192,18 +232,18 @@ export default {
         getMockDiseases() {
             // Datos de prueba para desarrollo
             return [
-                { id: 1, name: 'Hipertensión Arterial', category: 'Cardiovascular', description: 'Presión arterial elevada que puede dañar los vasos sanguíneos y órganos.' },
-                { id: 2, name: 'Diabetes Tipo 2', category: 'Endocrino', description: 'Afección crónica que afecta la forma en que el cuerpo procesa la glucosa en sangre.' },
-                { id: 3, name: 'Asma', category: 'Respiratorio', description: 'Enfermedad crónica que afecta las vías respiratorias de los pulmones.' },
-                { id: 4, name: 'Artritis Reumatoide', category: 'Inmunológico', description: 'Enfermedad autoinmune que causa inflamación de las articulaciones.' },
-                { id: 5, name: 'Migraña', category: 'Neurológico', description: 'Dolor de cabeza intenso que puede venir acompañado de náuseas y sensibilidad a la luz.' },
-                { id: 6, name: 'Enfermedad de Crohn', category: 'Digestivo', description: 'Enfermedad inflamatoria que afecta el revestimiento del tracto digestivo.' },
-                { id: 7, name: 'Hipotiroidismo', category: 'Endocrino', description: 'Producción insuficiente de la hormona tiroidea.' },
-                { id: 8, name: 'Psoriasis', category: 'Dermatológico', description: 'Enfermedad autoinmune que acelera el ciclo de vida de las células de la piel.' },
-                { id: 9, name: 'Glaucoma', category: 'Oftalmológico', description: 'Daño al nervio óptico que empeora con el tiempo, relacionado con la presión dentro del ojo.' },
-                { id: 10, name: 'Fibromialgia', category: 'Neurológico', description: 'Trastorno caracterizado por dolor musculoesquelético generalizado.' },
-                { id: 11, name: 'Apnea del Sueño', category: 'Respiratorio', description: 'Trastorno del sueño en el que la respiración se interrumpe repetidamente.' },
-                { id: 12, name: 'Anemia', category: 'Otros', description: 'Afección en la que no tienes suficientes glóbulos rojos sanos.' }
+                { id: 1, name: 'Hipertensión Arterial', description: 'Presión arterial elevada que puede dañar los vasos sanguíneos y órganos.' },
+                { id: 2, name: 'Diabetes Tipo 2', description: 'Afección crónica que afecta la forma en que el cuerpo procesa la glucosa en sangre.' },
+                { id: 3, name: 'Asma', description: 'Enfermedad crónica que afecta las vías respiratorias de los pulmones.' },
+                { id: 4, name: 'Artritis Reumatoide', description: 'Enfermedad autoinmune que causa inflamación de las articulaciones.' },
+                { id: 5, name: 'Migraña', description: 'Dolor de cabeza intenso que puede venir acompañado de náuseas y sensibilidad a la luz.' },
+                { id: 6, name: 'Enfermedad de Crohn', description: 'Enfermedad inflamatoria que afecta el revestimiento del tracto digestivo.' },
+                { id: 7, name: 'Hipotiroidismo', description: 'Producción insuficiente de la hormona tiroidea.' },
+                { id: 8, name: 'Psoriasis', description: 'Enfermedad autoinmune que acelera el ciclo de vida de las células de la piel.' },
+                { id: 9, name: 'Glaucoma', description: 'Daño al nervio óptico que empeora con el tiempo, relacionado con la presión dentro del ojo.' },
+                { id: 10, name: 'Fibromialgia', description: 'Trastorno caracterizado por dolor musculoesquelético generalizado.' },
+                { id: 11, name: 'Apnea del Sueño', description: 'Trastorno del sueño en el que la respiración se interrumpe repetidamente.' },
+                { id: 12, name: 'Anemia', description: 'Afección en la que no tienes suficientes glóbulos rojos sanos.' }
             ];
         },
         
@@ -216,7 +256,8 @@ export default {
             const term = this.searchTerm.toLowerCase().trim();
             this.filteredDiseases = this.diseases.filter(disease => 
                 disease.name.toLowerCase().includes(term) || 
-                disease.category.toLowerCase().includes(term)
+                (disease.category && disease.category.toLowerCase().includes(term)) ||
+                (disease.description && disease.description.toLowerCase().includes(term))
             );
         },
         
@@ -235,7 +276,13 @@ export default {
                 // Si no está seleccionada, verificar si ya tenemos 3
                 if (this.selectedDiseases.length >= 3) {
                     // Si ya hay 3 seleccionadas, mostrar mensaje o notificación
-                    alert('Solo puedes seleccionar hasta 3 condiciones médicas.');
+                    swal.fire({
+                        icon: 'warning',
+                        title: 'Límite alcanzado',
+                        text: 'Solo puedes seleccionar hasta 3 condiciones médicas.',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#0d6efd'
+                    });
                     return;
                 }
                 
@@ -255,24 +302,12 @@ export default {
             }
         },
         
-        getCategoryClass(category) {
-            const classes = {
-                'Cardiovascular': 'category-red',
-                'Respiratorio': 'category-blue',
-                'Digestivo': 'category-orange',
-                'Neurológico': 'category-purple',
-                'Endocrino': 'category-green',
-                'Inmunológico': 'category-yellow',
-                'Dermatológico': 'category-pink',
-                'Oftalmológico': 'category-teal',
-                'Otros': 'category-gray'
-            };
-            
-            return classes[category] || 'category-gray';
+        getIconClass(diseaseName) {
+            return this.diseaseIcons[diseaseName]?.class || this.diseaseIcons.default.class;
         },
         
-        getCategoryIcon(category) {
-            return this.categoryIcons[category] || 'fas fa-notes-medical';
+        getIconForDisease(diseaseName) {
+            return this.diseaseIcons[diseaseName]?.icon || this.diseaseIcons.default.icon;
         },
         
         goBack() {
@@ -281,16 +316,28 @@ export default {
         
         saveSelections() {
             if (this.selectedDiseases.length === 0) {
-                alert('Por favor selecciona al menos una condición médica.');
+                swal.fire({
+                    icon: 'error',
+                    title: 'Selección requerida',
+                    text: 'Por favor selecciona al menos una condición médica.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0d6efd'
+                });
                 return;
             }
             
             // Aquí iría el código para guardar las selecciones
             // Por ahora, solo mostramos un mensaje
-            alert('Selecciones guardadas con éxito (simulado)');
-            
-            // Redirigir a la siguiente página o al dashboard
-            this.$router.push({ name: 'PatientProfile' });
+            swal.fire({
+                icon: 'success',
+                title: '¡Excelente!',
+                text: 'Tus condiciones médicas han sido guardadas exitosamente.',
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#0d6efd'
+            }).then(() => {
+                // Redirigir a la siguiente página o al dashboard
+                this.$router.push({ name: 'PatientProfile' });
+            });
         }
     }
 };
@@ -299,30 +346,115 @@ export default {
 <style scoped>
 .diseases-selection-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4ecfb 100%);
-    padding: 40px 0;
+    background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 50%, #f8fbff 100%);
+    padding: 40px 0 100px; /* Añadido padding bottom para dejar espacio para la barra fija */
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Elementos decorativos de fondo */
+.decorative-element {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.2;
+    background: linear-gradient(45deg, #0d6efd, #36b9cc);
+    z-index: 0;
+}
+
+.decorative-element-1 {
+    width: 300px;
+    height: 300px;
+    top: -150px;
+    left: -150px;
+    animation: float 6s ease-in-out infinite;
+}
+
+.decorative-element-2 {
+    width: 150px;
+    height: 150px;
+    bottom: 10%;
+    left: 10%;
+    animation: float 8s ease-in-out infinite;
+    animation-delay: 1s;
+}
+
+.decorative-element-3 {
+    width: 200px;
+    height: 200px;
+    bottom: -100px;
+    right: 10%;
+    animation: float 7s ease-in-out infinite;
+    animation-delay: 0.5s;
+}
+
+.decorative-element-4 {
+    width: 80px;
+    height: 80px;
+    top: 15%;
+    right: 5%;
+    animation: float 5s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.decorative-element-5 {
+    width: 120px;
+    height: 120px;
+    top: 40%;
+    left: 5%;
+    animation: float 9s ease-in-out infinite;
+    animation-delay: 1.5s;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
+    width: 95%;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .selection-card {
     background: white;
     border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
     padding: 40px;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.selection-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top right, rgba(13, 110, 253, 0.03), transparent 70%),
+                radial-gradient(circle at bottom left, rgba(54, 185, 204, 0.03), transparent 70%);
+    z-index: 0;
 }
 
 .animated-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
     position: relative;
-    padding-bottom: 30px;
+    padding-bottom: 20px;
+    z-index: 1;
 }
 
 .animated-header::after {
@@ -333,22 +465,28 @@ export default {
     transform: translateX(-50%);
     width: 80px;
     height: 3px;
-    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
     border-radius: 3px;
 }
 
 .header-icon {
     font-size: 36px;
     color: #0d6efd;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     display: inline-block;
+    background: linear-gradient(135deg, #0d6efd, #36b9cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .page-title {
     font-size: 32px;
     font-weight: 700;
-    color: #212529;
+    color: #1a2b48;
     margin-bottom: 10px;
+    background: linear-gradient(135deg, #1a2b48, #0d6efd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -361,17 +499,20 @@ export default {
 .progress-container {
     background-color: #e9ecef;
     border-radius: 50px;
-    height: 20px;
+    height: 16px;
     position: relative;
     overflow: hidden;
-    margin-top: 30px;
+    margin: 30px 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1;
 }
 
 .progress-bar {
-    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
     height: 100%;
     border-radius: 50px;
     transition: width 0.5s ease;
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.2);
 }
 
 .progress-text {
@@ -380,8 +521,9 @@ export default {
     left: 50%;
     transform: translate(-50%, -50%);
     color: #495057;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
 }
 
 .loader-container {
@@ -400,6 +542,7 @@ export default {
     height: 50px;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.1);
 }
 
 @keyframes spin {
@@ -410,12 +553,16 @@ export default {
 .error-container {
     text-align: center;
     padding: 40px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .error-icon {
     font-size: 48px;
     color: #dc3545;
     margin-bottom: 20px;
+    text-shadow: 0 2px 5px rgba(220, 53, 69, 0.2);
 }
 
 .error-message {
@@ -427,10 +574,18 @@ export default {
 .retry-button {
     padding: 10px 20px;
     border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
+    transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(13, 110, 253, 0.2);
 }
 
 .diseases-container {
-    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
 }
 
 .search-container {
@@ -441,18 +596,27 @@ export default {
     border-radius: 50px;
     padding: 15px 20px;
     font-size: 16px;
-    border: 1px solid #ced4da;
+    border: 1px solid #e0e6ed;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.1);
 }
 
 .input-group-text {
     background-color: white;
-    border: 1px solid #ced4da;
+    border: 1px solid #e0e6ed;
+    color: #6c757d;
+    transition: all 0.3s ease;
 }
 
 .input-group-text:first-child {
     border-top-left-radius: 50px;
     border-bottom-left-radius: 50px;
+    padding-left: 20px;
 }
 
 .clear-btn {
@@ -460,6 +624,7 @@ export default {
     border-bottom-right-radius: 50px !important;
     cursor: pointer;
     color: #6c757d;
+    padding-right: 20px;
 }
 
 .clear-btn:hover {
@@ -468,7 +633,7 @@ export default {
 
 .diseases-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
@@ -486,6 +651,18 @@ export default {
     border: 1px solid #e9ecef;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     overflow: hidden;
+    z-index: 1;
+}
+
+.disease-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+    z-index: -1;
 }
 
 .disease-card:hover {
@@ -510,6 +687,7 @@ export default {
     font-size: 20px;
     opacity: 0;
     transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 3px rgba(13, 110, 253, 0.2));
 }
 
 .disease-icon {
@@ -519,9 +697,23 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 22px;
     color: white;
     flex-shrink: 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.disease-icon::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    border-radius: 12px;
 }
 
 .disease-details {
@@ -531,7 +723,7 @@ export default {
 .disease-name {
     font-size: 16px;
     font-weight: 600;
-    color: #212529;
+    color: #1a2b48;
     margin-bottom: 5px;
 }
 
@@ -582,37 +774,58 @@ export default {
     text-align: center;
     padding: 30px;
     background-color: #f8f9fa;
-    border-radius: 10px;
+    border-radius: 15px;
     color: #6c757d;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .no-results i {
     font-size: 36px;
     margin-bottom: 10px;
     display: block;
+    color: #6c757d;
 }
 
 .selected-summary {
-    background: #f8f9fa;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
     border-radius: 15px;
-    padding: 20px;
+    padding: 25px;
     margin-top: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+
+.selected-summary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(13, 110, 253, 0.03), transparent 70%);
+    z-index: 0;
 }
 
 .selected-summary h3 {
     font-size: 18px;
-    color: #212529;
+    color: #1a2b48;
     margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
 }
 
 .selected-pills {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    position: relative;
+    z-index: 1;
 }
 
 .selected-pill {
-    background: #0d6efd;
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
     color: white;
     padding: 8px 15px;
     border-radius: 50px;
@@ -620,21 +833,33 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
+    box-shadow: 0 3px 10px rgba(13, 110, 253, 0.2);
+    transition: all 0.3s ease;
+}
+
+.selected-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
 }
 
 .remove-btn {
-    background: none;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 12px;
+    color: white;
+    font-size: 10px;
     cursor: pointer;
-    padding: 0;
+    padding: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
 }
 
 .remove-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
     color: white;
 }
 
@@ -642,13 +867,15 @@ export default {
     display: flex;
     justify-content: space-between;
     margin-top: 40px;
+    position: relative;
+    z-index: 1;
 }
 
 .action-btn {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 15px 30px;
+    padding: 12px 30px;
     border-radius: 50px;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -658,27 +885,50 @@ export default {
     background-color: white;
     color: #6c757d;
     border: 1px solid #ced4da;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
 .back-btn:hover {
     background-color: #f8f9fa;
     transform: translateX(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary {
-    background-color: #0d6efd;
+.save-btn {
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
     border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
 }
 
-.btn-primary:hover:not(:disabled) {
-    background-color: #0b5ed7;
+.save-btn:hover:not(:disabled) {
+    background: linear-gradient(90deg, #0b5ed7, #31a7b7);
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3);
 }
 
-.btn-primary:disabled {
-    background-color: #74a7fc;
+.save-btn:disabled {
+    background: linear-gradient(90deg, #74a7fc, #8bccd5);
     cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Ilustración médica */
+.medical-illustration {
+    position: absolute;
+    right: -50px;
+    bottom: -50px;
+    width: 200px;
+    height: 200px;
+    z-index: 0;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.floating-img {
+    width: 100%;
+    height: auto;
+    animation: float 6s ease-in-out infinite;
 }
 
 /* Animaciones */
@@ -715,6 +965,10 @@ export default {
     .diseases-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
+    
+    .medical-illustration {
+        display: none;
+    }
 }
 
 @media (max-width: 768px) {
@@ -737,6 +991,13 @@ export default {
     .action-btn {
         padding: 12px 20px;
     }
+    
+    .decorative-element-2,
+    .decorative-element-3,
+    .decorative-element-4,
+    .decorative-element-5 {
+        display: none;
+    }
 }
 
 @media (max-width: 576px) {
@@ -751,11 +1012,157 @@ export default {
     }
     
     .animated-header {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
     
     .header-icon {
         font-size: 30px;
     }
+    
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .subtitle {
+        font-size: 14px;
+    }
+}
+
+/* Estilos para la barra fija inferior */
+.fixed-selection-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    padding: 15px 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.fixed-selection-bar.has-selections {
+    transform: translateY(0);
+}
+
+.selection-bar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.selection-bar-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 20px;
+}
+
+.selection-counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #1a2b48;
+    min-width: 150px;
+}
+
+.counter-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #0d6efd, #36b9cc);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    box-shadow: 0 3px 10px rgba(13, 110, 253, 0.2);
+}
+
+.selected-pills-container {
+    flex: 1;
+    overflow-x: auto;
+    padding: 5px 0;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    position: relative;
+}
+
+.selected-pills-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+.selected-pills {
+    display: flex;
+    gap: 10px;
+    padding: 0 5px;
+}
+
+.selected-pill {
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 3px 10px rgba(13, 110, 253, 0.2);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.selected-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.remove-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    color: white;
+}
+
+.back-button-container {
+    margin-top: 30px;
+}
+
+.save-btn {
+    background: linear-gradient(90deg, #0d6efd, #36b9cc);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
+    white-space: nowrap;
+    min-width: 180px;
+}
+
+.save-btn:hover:not(:disabled) {
+    background: linear-gradient(90deg, #0b5ed7, #31a7b7);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3);
+}
+
+.save-btn:disabled {
+    background: linear-gradient(90deg, #74a7fc, #8bccd5);
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 </style> 
