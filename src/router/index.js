@@ -16,6 +16,7 @@ import PatientSettingsLayout from "@/components/userprofile/userprofiletest/Pati
 import ProfileSection from "@/components/userprofile/userprofiletest/ProfileSection.vue";
 import SubscriptionSection from "@/components/userprofile/userprofiletest/SubscriptionSection.vue";
 import SecuritySection from "@/components/userprofile/userprofiletest/SecuritySection.vue";
+import DiseasesSelectionComponent from "@/components/verifyaccount/DiseasesSelectionComponent.vue";
 
 // Placeholder components - create these files later
 const PatientNotificationsSection = { template: '<div><h2>Notificaciones</h2><p>Contenido de Notificaciones...</p></div>' };
@@ -89,6 +90,15 @@ const routes = [
         component: VerifyAccountComponent,
         meta: {
             requiresAuth: true
+        },
+    },
+    {
+        path: '/paciente/condiciones-medicas',
+        name: 'PatientDiseasesSelection',
+        component: DiseasesSelectionComponent,
+        meta: {
+            requiresAuth: true,
+            hideHeader: true
         },
     },
     {

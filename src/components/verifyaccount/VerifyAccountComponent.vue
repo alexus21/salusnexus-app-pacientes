@@ -269,7 +269,7 @@ export default {
                     text: data.message
                 }).then(() => {
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    this.$router.push({ name: 'UserProfile' });
+                    this.$router.push({ name: 'PatientDiseasesSelection' });
                 });
             } catch (error) {
                 console.error("Error al verificar la cuenta: " + error.message);
@@ -341,7 +341,7 @@ export default {
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.isVerified = true;
-                    this.$router.push({ name: 'PatientProfile' });
+                    this.$router.push({ name: 'PatientDiseasesSelection' });
                 }
             });
         }
