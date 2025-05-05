@@ -188,6 +188,7 @@
 
 <script>
 import swal from "sweetalert2";
+const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
     name: 'NotificationsSection',
@@ -220,13 +221,49 @@ export default {
             isLoading: false
         };
     },
+    mounted() {
+        this.healthTipsEnabled = this.user.wants_health_tips;
+        this.loginAlertsEnabled = this.user.wants_security_notifications;
+        this.appNotificationsEnabled = this.user.wants_app_notifications;
+    },
     methods: {
         async saveNotificationSettings() {
             this.isLoading = true;
             
             try {
                 // Simular guardado (aquí se implementaría la llamada real a la API)
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log("wants_health_tips: " + this.healthTipsEnabled);
+                console.log("wants_security_notifications: " + this.loginAlertsEnabled)
+                console.log("wants_app_notifications: " + this.appNotificationsEnabled)
+                // await new Promise(resolve => setTimeout(resolve, 1000));
+                const response = await fetch(API_URL + '/patients/update-notifications-preferences', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        wants_health_tips: this.healthTipsEnabled,
+                        wants_security_notifications: this.loginAlertsEnabled,
+                        wants_app_notifications: this.appNotificationsEnabled,
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al guardar preferencias');
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    swal.fire({
+                        title: 'Error',
+                        text: 'No se pudieron guardar tus preferencias. Inténtalo de nuevo más tarde.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
                 
                 // Mensaje de éxito
                 swal.fire({
@@ -234,7 +271,11 @@ export default {
                     text: 'Tus preferencias de notificación se han actualizado correctamente',
                     icon: 'success',
                     confirmButtonText: 'Aceptar'
-                });
+                }).then(() => {
+                    this.$router.push({name: 'PatientProfile' }).then(() => {
+                        window.location.reload();
+                    });
+                })
             } catch (error) {
                 console.error('Error al guardar preferencias:', error);
                 swal.fire({
