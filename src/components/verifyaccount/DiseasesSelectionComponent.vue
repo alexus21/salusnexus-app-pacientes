@@ -326,17 +326,85 @@ export default {
                 return;
             }
             
-            // Aquí iría el código para guardar las selecciones
-            // Por ahora, solo mostramos un mensaje
+            // Extraer solo los IDs de las enfermedades seleccionadas
+            const diseaseIds = this.selectedDiseases.map(disease => disease.id);
+            
+            // Mostrar loader
             swal.fire({
-                icon: 'success',
-                title: '¡Excelente!',
-                text: 'Tus condiciones médicas han sido guardadas exitosamente.',
-                confirmButtonText: 'Continuar',
-                confirmButtonColor: '#0d6efd'
-            }).then(() => {
-                // Redirigir a la siguiente página o al dashboard
-                this.$router.push({ name: 'PatientProfile' });
+                title: 'Guardando selección...',
+                text: 'Por favor espera un momento.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    swal.showLoading();
+                }
+            });
+            
+            // Hacer petición al API
+            fetch(`${process.env.VUE_APP_API_URL}/diseases/assign`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    disease_ids: diseaseIds
+                })
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (body.status === true) {
+                    // Éxito
+                    swal.fire({
+                        icon: 'success',
+                        title: '¡Excelente!',
+                        text: body.message || 'Tus condiciones médicas han sido guardadas exitosamente.',
+                        confirmButtonText: 'Continuar',
+                        confirmButtonColor: '#0d6efd'
+                    }).then(() => {
+                        // Redirigir a la siguiente página o al dashboard
+                        this.$router.push({ name: 'PatientProfile' });
+                    });
+                } else {
+                    // Error general
+                    let errorMessage = body.message || 'Hubo un error al guardar tus condiciones médicas.';
+                    
+                    // Si hay errores específicos de validación (422)
+                    if (status === 422 && body.errors) {
+                        const errorMessages = [];
+                        
+                        // Procesar mensajes de error
+                        /* eslint-disable */
+                        Object.entries(body.errors).forEach(([field, messages]) => {
+                            messages.forEach(message => {
+                                errorMessages.push(message);
+                            });
+                        });
+                        
+                        if (errorMessages.length > 0) {
+                            errorMessage = errorMessages.join('<br>');
+                        }
+                    }
+                    
+                    swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMessage,
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al guardar las enfermedades:', error);
+                swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No pudimos conectarnos con el servidor. Por favor verifica tu conexión a internet e intenta nuevamente.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#0d6efd'
+                });
             });
         }
     }
