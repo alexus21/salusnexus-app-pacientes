@@ -107,37 +107,6 @@
                         </div>
                     </div>
                 </div>
-
-                <hr class="setting-divider">
-
-                <!-- Notificaciones de seguridad -->
-                <div class="setting-item">
-                    <div class="setting-icon-wrapper bg-light-green">
-                        <i class="fas fa-bell text-green"></i>
-                    </div>
-                    <div class="setting-content">
-                        <div class="setting-header">
-                            <div>
-                                <h5 class="setting-title">Notificaciones de seguridad</h5>
-                                <p class="setting-description">Recibe alertas sobre actividades sospechosas</p>
-                            </div>
-                            <div class="form-check form-switch large-switch">
-                                <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input" role="switch"
-                                       type="checkbox">
-                            </div>
-                        </div>
-                        <div class="setting-details">
-                            <div :class="{'setting-detail-disabled': !loginAlertsEnabled}" class="setting-detail-item">
-                                <i class="fas fa-user-secret me-2"></i>
-                                <span>Recibe notificaciones cuando se detecte un inicio de sesión desde un dispositivo desconocido</span>
-                            </div>
-                            <div :class="{'setting-detail-disabled': !loginAlertsEnabled}" class="setting-detail-item">
-                                <i class="fas fa-globe-americas me-2"></i>
-                                <span>Alertas de ubicaciones inusuales para inicios de sesión</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -223,7 +192,6 @@ export default {
                 confirm: false
             },
             twoFactorEnabled: false,
-            loginAlertsEnabled: true, // Default based on image
             showDeleteModal: false,
             deleteConfirmText: ''
         };

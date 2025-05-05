@@ -16,10 +16,10 @@ import PatientSettingsLayout from "@/components/userprofile/userprofiletest/Pati
 import ProfileSection from "@/components/userprofile/userprofiletest/ProfileSection.vue";
 import SubscriptionSection from "@/components/userprofile/userprofiletest/SubscriptionSection.vue";
 import SecuritySection from "@/components/userprofile/userprofiletest/SecuritySection.vue";
+import NotificationsSection from "@/components/userprofile/userprofiletest/NotificationsSection.vue";
 import DiseasesSelectionComponent from "@/components/verifyaccount/DiseasesSelectionComponent.vue";
 
 // Placeholder components - create these files later
-const PatientNotificationsSection = { template: '<div><h2>Notificaciones</h2><p>Contenido de Notificaciones...</p></div>' };
 const PatientConfigurationSection = { template: '<div><h2>Configuración</h2><p>Contenido de Configuración...</p></div>' };
 
 const routes = [
@@ -136,7 +136,7 @@ const routes = [
             {
                 path: 'notificaciones',
                 name: 'PatientNotifications',
-                component: PatientNotificationsSection
+                component: NotificationsSection
             },
             {
                 path: 'configuracion',
