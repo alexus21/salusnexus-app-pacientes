@@ -26,10 +26,12 @@
                         <div class="setting-header">
                             <div>
                                 <h5 class="setting-title">Tips de salud por correo</h5>
-                                <p class="setting-description">Recibe consejos y recomendaciones de salud periódicamente en tu correo</p>
+                                <p class="setting-description">Recibe consejos y recomendaciones de salud periódicamente
+                                    en tu correo</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="healthTipsSwitch" v-model="healthTipsEnabled" class="form-check-input" role="switch"
+                                <input id="healthTipsSwitch" v-model="healthTipsEnabled" class="form-check-input"
+                                       role="switch"
                                        type="checkbox">
                             </div>
                         </div>
@@ -60,7 +62,8 @@
                                 <p class="setting-description">Recibe alertas sobre actividades sospechosas</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input" role="switch"
+                                <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input"
+                                       role="switch"
                                        type="checkbox">
                             </div>
                         </div>
@@ -88,23 +91,28 @@
                         <div class="setting-header">
                             <div>
                                 <h5 class="setting-title">Notificaciones de la aplicación</h5>
-                                <p class="setting-description">Configura qué notificaciones deseas recibir en la aplicación</p>
+                                <p class="setting-description">Configura qué notificaciones deseas recibir en la
+                                    aplicación</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="appNotificationsSwitch" v-model="appNotificationsEnabled" class="form-check-input" role="switch"
+                                <input id="appNotificationsSwitch" v-model="appNotificationsEnabled"
+                                       class="form-check-input" role="switch"
                                        type="checkbox">
                             </div>
                         </div>
                         <div class="setting-details">
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-calendar-check me-2"></i>
                                 <span>Recordatorios de citas y consultas</span>
                             </div>
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-comment-medical me-2"></i>
                                 <span>Notificaciones de mensajes y comunicaciones</span>
                             </div>
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-clipboard-list me-2"></i>
                                 <span>Actualizaciones sobre tu historial médico</span>
                             </div>
@@ -136,7 +144,8 @@
                         <div class="communication-channels mt-3">
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="emailChannel" v-model="emailEnabled" class="form-check-input" type="checkbox">
+                                    <input id="emailChannel" v-model="emailEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="emailChannel">
                                         <i class="fas fa-envelope me-2"></i>
                                         Correo electrónico
@@ -145,7 +154,8 @@
                             </div>
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="smsChannel" v-model="smsEnabled" class="form-check-input" type="checkbox">
+                                    <input id="smsChannel" v-model="smsEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="smsChannel">
                                         <i class="fas fa-sms me-2"></i>
                                         Mensajes SMS
@@ -154,7 +164,8 @@
                             </div>
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="pushChannel" v-model="pushEnabled" class="form-check-input" type="checkbox">
+                                    <input id="pushChannel" v-model="pushEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="pushChannel">
                                         <i class="fas fa-bell me-2"></i>
                                         Notificaciones push
@@ -188,6 +199,7 @@
 
 <script>
 import swal from "sweetalert2";
+
 const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
@@ -208,15 +220,15 @@ export default {
             healthTipsEnabled: true,
             loginAlertsEnabled: true,
             appNotificationsEnabled: true,
-            
+
             // Canales de comunicación
             emailEnabled: true,
             smsEnabled: false,
             pushEnabled: true,
-            
+
             // Frecuencia
             communicationFrequency: 'weekly',
-            
+
             // Estado
             isLoading: false
         };
@@ -229,7 +241,7 @@ export default {
     methods: {
         async saveNotificationSettings() {
             this.isLoading = true;
-            
+
             try {
                 // Simular guardado (aquí se implementaría la llamada real a la API)
                 console.log("wants_health_tips: " + this.healthTipsEnabled);
@@ -264,7 +276,7 @@ export default {
                     });
                     return;
                 }
-                
+
                 // Mensaje de éxito
                 swal.fire({
                     title: 'Preferencias guardadas',
@@ -272,10 +284,10 @@ export default {
                     icon: 'success',
                     confirmButtonText: 'Aceptar'
                 }).then(() => {
-                    this.$router.push({name: 'PatientProfile' }).then(() => {
+                    this.$router.push({name: 'PatientProfile'}).then(() => {
                         window.location.reload();
                     });
-                })
+                });
             } catch (error) {
                 console.error('Error al guardar preferencias:', error);
                 swal.fire({
