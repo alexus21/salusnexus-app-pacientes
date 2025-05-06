@@ -32,7 +32,7 @@
                             <div class="form-check form-switch large-switch">
                                 <input id="healthTipsSwitch" v-model="healthTipsEnabled" class="form-check-input"
                                        role="switch"
-                                       type="checkbox">
+                                       type="checkbox" @change="checkChanges">
                             </div>
                         </div>
                         <div class="setting-details">
@@ -64,7 +64,7 @@
                             <div class="form-check form-switch large-switch">
                                 <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input"
                                        role="switch"
-                                       type="checkbox">
+                                       type="checkbox" @change="checkChanges">
                             </div>
                         </div>
                         <div class="setting-details">
@@ -97,7 +97,7 @@
                             <div class="form-check form-switch large-switch">
                                 <input id="appNotificationsSwitch" v-model="appNotificationsEnabled"
                                        class="form-check-input" role="switch"
-                                       type="checkbox">
+                                       type="checkbox" @change="checkChanges">
                             </div>
                         </div>
                         <div class="setting-details">
@@ -187,11 +187,24 @@
             </div>
         </div>
 
-        <!-- Botón para guardar cambios -->
-        <div class="action-buttons mt-4">
+        <!-- Botón para guardar cambios (mantienido para compatibilidad pero oculto) -->
+        <div v-if="false" class="action-buttons mt-4">
             <button class="btn btn-primary action-btn" @click="saveNotificationSettings">
                 <i class="fas fa-save me-2"></i>
                 Guardar preferencias
+            </button>
+        </div>
+        
+        <!-- Botón flotante para guardar cambios -->
+        <div v-if="settingsChanged" class="sticky-save-button">
+            <button 
+                class="btn btn-primary save-btn" 
+                @click="saveNotificationSettings"
+                :disabled="isLoading"
+            >
+                <i v-if="isLoading" class="fas fa-spinner fa-spin me-2"></i>
+                <i v-else class="fas fa-save me-2"></i>
+                Guardar cambios
             </button>
         </div>
     </div>
@@ -218,8 +231,11 @@ export default {
         return {
             // Configuración de notificaciones
             healthTipsEnabled: true,
+            initialHealthTipsEnabled: true,
             loginAlertsEnabled: true,
+            initialLoginAlertsEnabled: true,
             appNotificationsEnabled: true,
+            initialAppNotificationsEnabled: true,
 
             // Canales de comunicación
             emailEnabled: true,
@@ -230,24 +246,58 @@ export default {
             communicationFrequency: 'weekly',
 
             // Estado
-            isLoading: false
+            isLoading: false,
+            settingsChanged: false
         };
     },
     mounted() {
+        // Establecer valores iniciales
         this.healthTipsEnabled = this.user.wants_health_tips;
+        this.initialHealthTipsEnabled = this.user.wants_health_tips;
+        
         this.loginAlertsEnabled = this.user.wants_security_notifications;
+        this.initialLoginAlertsEnabled = this.user.wants_security_notifications;
+        
         this.appNotificationsEnabled = this.user.wants_app_notifications;
+        this.initialAppNotificationsEnabled = this.user.wants_app_notifications;
     },
     methods: {
+        // Verificar si ha habido cambios
+        checkChanges() {
+            this.settingsChanged = 
+                this.healthTipsEnabled !== this.initialHealthTipsEnabled ||
+                this.loginAlertsEnabled !== this.initialLoginAlertsEnabled ||
+                this.appNotificationsEnabled !== this.initialAppNotificationsEnabled;
+        },
+        
+        // Sweetalert Toast Mixin
+        showToast(icon, title) {
+            const Toast = swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', swal.stopTimer)
+                    toast.addEventListener('mouseleave', swal.resumeTimer)
+                }
+            });
+            
+            return Toast.fire({
+                icon,
+                title
+            });
+        },
+        
         async saveNotificationSettings() {
             this.isLoading = true;
 
             try {
-                // Simular guardado (aquí se implementaría la llamada real a la API)
                 console.log("wants_health_tips: " + this.healthTipsEnabled);
                 console.log("wants_security_notifications: " + this.loginAlertsEnabled)
                 console.log("wants_app_notifications: " + this.appNotificationsEnabled)
-                // await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 const response = await fetch(API_URL + '/patients/update-notifications-preferences', {
                     method: 'PATCH',
                     headers: {
@@ -277,19 +327,23 @@ export default {
                     return;
                 }
 
-                // Mensaje de éxito
-                swal.fire({
-                    title: 'Preferencias guardadas',
-                    text: 'Tus preferencias de notificación se han actualizado correctamente',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
-                }).then(() => {
+                // Actualizamos los valores iniciales tras guardar correctamente
+                this.initialHealthTipsEnabled = this.healthTipsEnabled;
+                this.initialLoginAlertsEnabled = this.loginAlertsEnabled;
+                this.initialAppNotificationsEnabled = this.appNotificationsEnabled;
+                
+                // Ocultamos el botón de guardar
+                this.settingsChanged = false;
+
+                // Mensaje de éxito usando Toast
+                this.showToast('success', 'Preferencias guardadas correctamente').then(() => {
                     this.$router.push({name: 'PatientProfile'}).then(() => {
                         window.location.reload();
                     });
                 });
             } catch (error) {
                 console.error('Error al guardar preferencias:', error);
+                // Mantenemos el swal.fire para errores ya que necesitamos un botón de confirmación
                 swal.fire({
                     title: 'Error',
                     text: 'No se pudieron guardar tus preferencias. Inténtalo de nuevo más tarde.',
@@ -307,6 +361,7 @@ export default {
 <style scoped>
 .notifications-section {
     position: relative;
+    padding-bottom: 60px; /* Espacio para el botón flotante */
 }
 
 .section-header {
@@ -624,6 +679,54 @@ export default {
     box-shadow: 0 6px 12px rgba(13, 110, 253, 0.3);
 }
 
+/* Botón flotante para guardar cambios */
+.sticky-save-button {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    padding: 0 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.save-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 16px;
+    background: linear-gradient(145deg, #0d6efd, #0b5ed7);
+    color: white;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.save-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.5);
+}
+
+.save-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+}
+
+.save-btn:disabled {
+    background: linear-gradient(145deg, #c1d3f3, #b0c7e8);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: not-allowed;
+}
+
 /* Responsive */
 /* Tablets (768px to 991px) */
 @media (min-width: 768px) and (max-width: 991.98px) {
@@ -686,6 +789,14 @@ export default {
     .action-btn {
         width: 100%;
     }
+    
+    .sticky-save-button {
+        padding: 0 10px;
+    }
+    
+    .save-btn {
+        width: 100%;
+    }
 }
 
 /* Small mobile devices (576px and down) */
@@ -735,6 +846,11 @@ export default {
 
     .form-check-label {
         font-size: 0.85rem;
+    }
+    
+    .save-btn {
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }
 
