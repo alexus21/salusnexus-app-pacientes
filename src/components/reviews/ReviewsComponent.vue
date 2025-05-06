@@ -1,61 +1,7 @@
 <template>
     <div>
-        <!-- Custom Header (similar to ClinicasComponent) -->
-        <div class="custom-header">
-            <div class="container-fluid">
-                <div class="header-content">
-                    <!-- Logo section -->
-                    <div class="header-logo">
-                        <i class="fas fa-heartbeat text-primary me-2"></i>
-                        <span class="header-title">Salus Nexus</span>
-                    </div>
-
-                    <!-- User profile section -->
-                    <div class="header-user">
-                        <!-- Profile dropdown -->
-                        <div class="dropdown">
-                            <!-- Show profile image if available -->
-                            <img
-                                v-if="hasProfileImage"
-                                :src="userProfileImage"
-                                class="profile-image dropdown-toggle"
-                                id="profileDropdown"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                alt="Perfil"
-                            >
-                            <!-- Show initials if no profile image -->
-                            <div
-                                v-else
-                                class="profile-initials dropdown-toggle"
-                                id="profileDropdown"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                            >
-                                {{ userInitials }}
-                            </div>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li>
-                                    <router-link to="/perfil" class="dropdown-item">
-                                        <i class="fas fa-user me-2"></i> Ir al perfil
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <router-link to="/loginHome" class="dropdown-item">
-                                        <i class="fas fa-clinic-medical me-2"></i> Clínicas
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" @click.prevent="logout">
-                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Use shared header component -->
+        <header-component :isUserVerified="true"></header-component>
 
         <!-- Notification Toast -->
         <div v-if="notification.show" 
@@ -171,16 +117,17 @@
 
 <script>
 import ReviewCard from './ReviewCard.vue';
+import HeaderComponent from '@/components/shared/HeaderComponent.vue';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 const API_URL = process.env.VUE_APP_API_URL;
-const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'ReviewsComponent',
     components: {
-        ReviewCard
+        ReviewCard,
+        HeaderComponent
     },
     data() {
         return {
@@ -271,8 +218,6 @@ export default {
         }
     },
     async mounted() {
-        await this.checkUserProfile();
-        await this.loadUserProfileImage();
         await this.fetchAppointments();
 
         AOS.init({
@@ -282,53 +227,6 @@ export default {
         });
     },
     methods: {
-        async checkUserProfile() {
-            try {
-                this.userData = JSON.parse(localStorage.getItem('user'));
-                if (!this.userData) {
-                    const response = await fetch(`${API_URL}/userprofile`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-
-                    if (!response.ok) {
-                        return;
-                    }
-
-                    const data = await response.json();
-                    if (!data.status) {
-                        return;
-                    }
-
-                    this.userData = data.data;
-                    localStorage.setItem('user', JSON.stringify(this.userData));
-                }
-            } catch (error) {
-                console.error('Error checking user profile:', error);
-            }
-        },
-
-        async loadUserProfileImage() {
-            try {
-                if (!this.userData) {
-                    this.userData = JSON.parse(localStorage.getItem('user'));
-                }
-
-                if (this.userData && this.userData.profile_photo_path) {
-                    this.userProfileImage = `${API_URL_IMAGE}/${this.userData.profile_photo_path}`;
-                    this.hasProfileImage = true;
-                } else {
-                    this.hasProfileImage = false;
-                }
-            } catch (error) {
-                console.error('Error loading profile image:', error);
-                this.hasProfileImage = false;
-            }
-        },
-
         async fetchAppointments() {
             this.isLoading = true;
             try {
@@ -368,15 +266,12 @@ export default {
                 this.isLoading = false;
             }
         },
-
         filterReviews() {
             // The filtering is handled by the computed property
         },
-
         setFilter(filterValue) {
             this.activeFilter = filterValue;
         },
-
         updateRating(appointmentId, newRating, comment) {
             // Find and update the appointment
             const index = this.appointments.findIndex(app => app.appointment_id === appointmentId);
@@ -393,7 +288,6 @@ export default {
                 this.saveRating(appointmentId, newRating, comment, originalRating, originalComment);
             }
         },
-
         async saveRating(appointmentId, rating, comment, originalRating, originalComment) {
             try {
                 // Prepare the current datetime in ISO format
@@ -441,7 +335,6 @@ export default {
                 this.showNotification('No se pudo guardar tu valoración. Por favor, intenta nuevamente.', 'error');
             }
         },
-
         showNotification(message, type = 'success') {
             // Clear any existing timeout
             if (this.notification.timeout) {
@@ -458,110 +351,17 @@ export default {
                 this.notification.show = false;
             }, 5000);
         },
-        
         hideNotification() {
             this.notification.show = false;
             if (this.notification.timeout) {
                 clearTimeout(this.notification.timeout);
             }
-        },
-
-        logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            this.$router.push({name: 'Login'});
         }
     }
 };
 </script>
 
 <style scoped>
-/* Custom Header Styles (similar to ClinicasComponent) */
-.custom-header {
-    background-color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    padding: 10px 0;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 15px;
-}
-
-.header-logo {
-    display: flex;
-    align-items: center;
-}
-
-.header-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #0d6efd;
-    margin-left: 5px;
-}
-
-.header-user {
-    display: flex;
-    align-items: center;
-}
-
-.profile-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    object-fit: cover;
-    border: 2px solid #f0f7ff;
-    transition: border-color 0.3s ease;
-}
-
-.profile-image:hover {
-    border-color: #0d6efd;
-}
-
-.profile-initials {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    background-color: #0d6efd;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    border: 2px solid #f0f7ff;
-    transition: background-color 0.3s ease;
-}
-
-.profile-initials:hover {
-    background-color: #0b5ed7;
-    border-color: #0d6efd;
-}
-
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    margin-top: 10px;
-}
-
-.dropdown-item {
-    padding: 8px 20px;
-    color: #495057;
-    transition: background-color 0.3s ease;
-}
-
-.dropdown-item:hover {
-    background-color: #f0f7ff;
-    color: #0d6efd;
-}
-
 /* Main Container */
 .main-container {
     width: 100%;

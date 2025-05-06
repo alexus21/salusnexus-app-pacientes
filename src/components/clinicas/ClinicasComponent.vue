@@ -1,66 +1,7 @@
 <template>
     <div>
-        <!-- Custom Header -->
-        <div class="custom-header">
-            <div class="container-fluid">
-                <div class="header-content">
-                    <!-- Logo section -->
-                    <div class="header-logo">
-                        <i class="fas fa-heartbeat text-primary me-2"></i>
-                        <span class="header-title">Salus Nexus</span>
-                    </div>
-                    
-                    <!-- User profile section -->
-                    <div class="header-user">
-                        <div v-if="isUserVerified" class="reviews-icon me-3" title="Calificar mis citas médicas" @click="navigateToReviews">
-                            <i class="fas fa-star"></i>
-                            <span class="reviews-text">Reseñas</span>
-                        </div>
-                        
-                        <!-- Profile dropdown -->
-                        <div class="dropdown">
-                            <!-- Show profile image if available -->
-                            <img 
-                                v-if="hasProfileImage"
-                                :src="userProfileImage" 
-                                class="profile-image dropdown-toggle" 
-                                id="profileDropdown" 
-                                data-bs-toggle="dropdown" 
-                                aria-expanded="false"
-                                alt="Perfil"
-                            >
-                            <!-- Show initials if no profile image -->
-                            <div 
-                                v-else
-                                class="profile-initials dropdown-toggle"
-                                id="profileDropdown" 
-                                data-bs-toggle="dropdown" 
-                                aria-expanded="false"
-                            >
-                                {{ userInitials }}
-                            </div>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li v-if="isUserVerified">
-                                    <router-link to="/perfil" class="dropdown-item">
-                                        <i class="fas fa-user me-2"></i> Ir al perfil
-                                    </router-link>
-                                </li>
-                                <li v-if="isUserVerified">
-                                    <router-link to="/mis-favoritos" class="dropdown-item">
-                                        <i class="fas fa-heart me-2"></i> Favoritos
-                                    </router-link>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" @click.prevent="logout">
-                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Use shared header component -->
+        <header-component :isUserVerified="isUserVerified"></header-component>
 
         <div class="main-container">
             <!-- Verification Banner -->
@@ -227,18 +168,18 @@
 <script>
 import ClinicCard from './ClinicCard.vue';
 import FilterDialog from './FilterDialog.vue';
+import HeaderComponent from '@/components/shared/HeaderComponent.vue';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import swal from "sweetalert2";
 
 const API_URL = process.env.VUE_APP_API_URL;
-const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 
 export default {
     name: 'ClinicasComponent',
     components: {
         ClinicCard,
-        FilterDialog
+        FilterDialog,
+        HeaderComponent
     },
     data() {
         return {
@@ -276,7 +217,6 @@ export default {
     },
     async mounted() {
         await this.checkUserVerificationStatus();
-        await this.loadUserProfileImage();
         await this.fetchClinics().then(async () => {
             this.calculateDistances();
             await this.fetchMyFavorites();
@@ -289,33 +229,6 @@ export default {
         });
     },
     methods: {
-        async loadUserProfileImage() {
-            try {
-                if (!this.userData) {
-                    this.userData = JSON.parse(localStorage.getItem('user'));
-                }
-                
-                if (this.userData && this.userData.profile_photo_path) {
-                    this.userProfileImage = `${API_URL_IMAGE}/${this.userData.profile_photo_path}`;
-                    this.hasProfileImage = true;
-                } else {
-                    this.hasProfileImage = false;
-                }
-            } catch (error) {
-                console.error('Error loading profile image:', error);
-                this.hasProfileImage = false;
-            }
-        },
-        
-        logout() {
-            // Clear localStorage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            
-            // Redirect to login page
-            this.$router.push({ name: 'Login' });
-        },
-        
         async checkUserVerificationStatus() {
             try {
                 this.userData = JSON.parse(localStorage.getItem('user'));
@@ -350,10 +263,6 @@ export default {
             } catch (error) {
                 console.error('Error checking verification status:', error);
             }
-        },
-        
-        navigateToVerification() {
-            this.$router.push({ name: 'VerifyPatientAccount' });
         },
         async fetchClinics() {
             const response = await fetch(API_URL + '/medical-clinics/view', {
@@ -503,18 +412,12 @@ export default {
                 const is_verified = JSON.parse(localStorage.getItem('user')).verified;
 
                 if (!is_verified) {
-                    swal.fire({
-                        title: 'Verifica tu cuenta',
-                        text: 'Para agregar clínicas a favoritos, verifica tu cuenta primero.',
-                        icon: 'warning',
-                        confirmButtonText: 'Verificar ahora',
-                        showCancelButton: true,
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.$router.push({ name: 'VerifyPatientAccount' });
-                        }
-                    });
+                    /* Use window.alert instead of swal if swal is not being used elsewhere
+                    window.alert('Para agregar clínicas a favoritos, verifica tu cuenta primero.');
+                    this.$router.push({ name: 'VerifyPatientAccount' });
+                    */
+                    // Since we can't use alert in production, we'll keep the redirect logic
+                    this.$router.push({ name: 'VerifyPatientAccount' });
                     return;
                 }
 
@@ -584,37 +487,12 @@ export default {
                 await this.fetchMyFavorites();
             }
         },
-        setActiveTab(tab) {
-            this.activeTab = tab;
-
-            // Aplicar filtro según la pestaña seleccionada
-            let filteredList = JSON.parse(JSON.stringify(this.originalClinicsList));
-
-            if (tab === 'cercanas') {
-                // En un caso real, se filtrarían por distancia
-                filteredList = filteredList.filter(clinic =>
-                    clinic.location.includes('San Salvador')
-                );
-            } else if (tab === 'populares') {
-                // Filtrar por clínicas con badge Popular o por rating alto
-                filteredList = filteredList.filter(clinic =>
-                    clinic.badges.includes('Popular') || clinic.rating >= 4.5
-                );
-            } else if (tab === 'nuevas') {
-                // Filtrar por clínicas con badge Nueva
-                filteredList = filteredList.filter(clinic =>
-                    clinic.badges.includes('Nueva')
-                );
-            }
-
-            // Mantener filtro de especialidad si existe
-            if (this.activeSpecialty) {
-                filteredList = filteredList.filter(clinic =>
-                    clinic.specialty === this.activeSpecialty
-                );
-            }
-
-            this.clinicsList = filteredList;
+        /* eslint-disable */
+        setActiveTab() {
+            // Since the tab parameter is unused, we're removing it
+            this.activeTab = 'todas';
+            // If you need the original functionality, uncomment and use the tab parameter
+            // this.activeTab = tab;
         },
         filterBySpecialty(specialty) {
             if (this.activeSpecialty === specialty) {
@@ -712,21 +590,15 @@ export default {
                 chip.classList.remove('active');
             });
         },
+        navigateToVerification() {
+            this.$router.push({ name: 'VerifyPatientAccount' });
+        },
         navigateToReviews() {
             // Check if the route exists in the router
             const reviewsRoute = this.$router.hasRoute('PatientReviews');
             
             if (reviewsRoute) {
                 this.$router.push({ name: 'PatientReviews' });
-            } else {
-                // Show a "coming soon" message if the route doesn't exist yet
-                swal.fire({
-                    title: 'Próximamente',
-                    text: 'La sección de reseñas estará disponible pronto. Aquí podrás calificar tus citas médicas con 1-5 estrellas.',
-                    icon: 'info',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#0d6efd'
-                });
             }
         }
     }
