@@ -18,6 +18,7 @@ import SubscriptionSection from "@/components/userprofile/userprofiletest/Subscr
 import SecuritySection from "@/components/userprofile/userprofiletest/SecuritySection.vue";
 import NotificationsSection from "@/components/userprofile/userprofiletest/NotificationsSection.vue";
 import DiseasesSelectionComponent from "@/components/verifyaccount/DiseasesSelectionComponent.vue";
+import FavoritesComponent from "@/components/favorites/FavoritesComponent.vue";
 
 // Placeholder components - create these files later
 const PatientConfigurationSection = { template: '<div><h2>Configuración</h2><p>Contenido de Configuración...</p></div>' };
@@ -40,6 +41,15 @@ const routes = [
         path: '/login-home',
         name: 'loginHome',
         component: ClinicasComponent,
+        meta: {
+            requiresAuth: true,
+            hideHeader: true
+        }
+    },
+    {
+        path: '/mis-favoritos',
+        name: 'Favorites',
+        component: FavoritesComponent,
         meta: {
             requiresAuth: true,
             hideHeader: true

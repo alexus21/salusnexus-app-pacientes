@@ -45,6 +45,11 @@
                                         <i class="fas fa-user me-2"></i> Ir al perfil
                                     </router-link>
                                 </li>
+                                <li v-if="isUserVerified">
+                                    <router-link to="/mis-favoritos" class="dropdown-item">
+                                        <i class="fas fa-heart me-2"></i> Favoritos
+                                    </router-link>
+                                </li>
                                 <li>
                                     <a class="dropdown-item" href="#" @click.prevent="logout">
                                         <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
