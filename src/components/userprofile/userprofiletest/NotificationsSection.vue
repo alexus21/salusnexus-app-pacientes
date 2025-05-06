@@ -26,18 +26,13 @@
                         <div class="setting-header">
                             <div>
                                 <h5 class="setting-title">Tips de salud por correo</h5>
-                                <p class="setting-description">Recibe consejos y recomendaciones de salud periódicamente en tu correo</p>
+                                <p class="setting-description">Recibe consejos y recomendaciones de salud periódicamente
+                                    en tu correo</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="healthTipsSwitch" 
-                                       v-model="healthTipsEnabled" 
-                                       :disabled="isLoadingHealthTips || isSavingHealthTips"
-                                       class="form-check-input" 
+                                <input id="healthTipsSwitch" v-model="healthTipsEnabled" class="form-check-input"
                                        role="switch"
                                        type="checkbox">
-                                <span v-if="isLoadingHealthTips || isSavingHealthTips" class="loading-indicator">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </span>
                             </div>
                         </div>
                         <div class="setting-details">
@@ -67,7 +62,8 @@
                                 <p class="setting-description">Recibe alertas sobre actividades sospechosas</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input" role="switch"
+                                <input id="loginAlertsSwitch" v-model="loginAlertsEnabled" class="form-check-input"
+                                       role="switch"
                                        type="checkbox">
                             </div>
                         </div>
@@ -95,23 +91,28 @@
                         <div class="setting-header">
                             <div>
                                 <h5 class="setting-title">Notificaciones de la aplicación</h5>
-                                <p class="setting-description">Configura qué notificaciones deseas recibir en la aplicación</p>
+                                <p class="setting-description">Configura qué notificaciones deseas recibir en la
+                                    aplicación</p>
                             </div>
                             <div class="form-check form-switch large-switch">
-                                <input id="appNotificationsSwitch" v-model="appNotificationsEnabled" class="form-check-input" role="switch"
+                                <input id="appNotificationsSwitch" v-model="appNotificationsEnabled"
+                                       class="form-check-input" role="switch"
                                        type="checkbox">
                             </div>
                         </div>
                         <div class="setting-details">
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-calendar-check me-2"></i>
                                 <span>Recordatorios de citas y consultas</span>
                             </div>
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-comment-medical me-2"></i>
                                 <span>Notificaciones de mensajes y comunicaciones</span>
                             </div>
-                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}" class="setting-detail-item">
+                            <div :class="{'setting-detail-disabled': !appNotificationsEnabled}"
+                                 class="setting-detail-item">
                                 <i class="fas fa-clipboard-list me-2"></i>
                                 <span>Actualizaciones sobre tu historial médico</span>
                             </div>
@@ -143,7 +144,8 @@
                         <div class="communication-channels mt-3">
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="emailChannel" v-model="emailEnabled" class="form-check-input" type="checkbox">
+                                    <input id="emailChannel" v-model="emailEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="emailChannel">
                                         <i class="fas fa-envelope me-2"></i>
                                         Correo electrónico
@@ -152,7 +154,8 @@
                             </div>
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="smsChannel" v-model="smsEnabled" class="form-check-input" type="checkbox">
+                                    <input id="smsChannel" v-model="smsEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="smsChannel">
                                         <i class="fas fa-sms me-2"></i>
                                         Mensajes SMS
@@ -161,7 +164,8 @@
                             </div>
                             <div class="channel-item">
                                 <div class="form-check form-switch">
-                                    <input id="pushChannel" v-model="pushEnabled" class="form-check-input" type="checkbox">
+                                    <input id="pushChannel" v-model="pushEnabled" class="form-check-input"
+                                           type="checkbox">
                                     <label class="form-check-label" for="pushChannel">
                                         <i class="fas fa-bell me-2"></i>
                                         Notificaciones push
@@ -196,6 +200,8 @@
 <script>
 import swal from "sweetalert2";
 
+const API_URL = process.env.VUE_APP_API_URL;
+
 export default {
     name: 'NotificationsSection',
     props: {
@@ -211,163 +217,76 @@ export default {
     data() {
         return {
             // Configuración de notificaciones
-            healthTipsEnabled: false, // Default value, will be updated from API
-            initialLoadComplete: false, // Flag to prevent watcher from triggering during initial load
+            healthTipsEnabled: true,
             loginAlertsEnabled: true,
             appNotificationsEnabled: true,
-            
+
             // Canales de comunicación
             emailEnabled: true,
             smsEnabled: false,
             pushEnabled: true,
-            
+
             // Frecuencia
             communicationFrequency: 'weekly',
-            
+
             // Estado
-            isLoading: false,
-            isLoadingHealthTips: false,
-            isSavingHealthTips: false
+            isLoading: false
         };
     },
-    watch: {
-    /* eslint-disable */
-        healthTipsEnabled(newValue, oldValue) {
-            // Only update if initial load is complete and not currently loading
-            if (this.initialLoadComplete && !this.isLoadingHealthTips) {
-                this.updateHealthTipsPreference(newValue);
-            }
-        }
-    },
     mounted() {
-        // Fetch the health tips preference when the component is mounted
-        this.fetchHealthTipsPreference();
+        this.healthTipsEnabled = this.user.wants_health_tips;
+        this.loginAlertsEnabled = this.user.wants_security_notifications;
+        this.appNotificationsEnabled = this.user.wants_app_notifications;
     },
     methods: {
-        async fetchHealthTipsPreference() {
-            this.isLoadingHealthTips = true;
-            
-            try {
-                const API_URL = process.env.VUE_APP_API_URL;
-                const response = await fetch(`${API_URL}/patients/health-tips-preference`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Error al obtener preferencias: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.status) {
-                    // Update the checkbox state based on the API response
-                    // Set the value without triggering the watch
-                    this.healthTipsEnabled = data.data.wants_health_tips === true;
-                    
-                    // Mark initial load as complete AFTER setting the value
-                    setTimeout(() => {
-                        this.initialLoadComplete = true;
-                    }, 100);
-                } else {
-                    console.error('Error en respuesta API:', data.message);
-                }
-            } catch (error) {
-                console.error('Error al cargar preferencias de consejos de salud:', error);
-                swal.fire({
-                    title: 'Error',
-                    text: 'No se pudieron cargar tus preferencias de consejos de salud. Inténtalo de nuevo más tarde.',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar'
-                });
-            } finally {
-                this.isLoadingHealthTips = false;
-            }
-        },
-        
-        async updateHealthTipsPreference(value) {
-            // Skip if we're in the middle of loading or updating
-            if (this.isLoadingHealthTips || this.isSavingHealthTips) return;
-            
-            this.isSavingHealthTips = true;
-            
-            try {
-                const API_URL = process.env.VUE_APP_API_URL;
-                const response = await fetch(`${API_URL}/patients/update-health-tips-preference`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        wants_health_tips: value
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Error al actualizar preferencias: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.status) {
-                    // Show a small success notification
-                    const Toast = swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                    
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Preferencia actualizada correctamente'
-                    });
-                } else {
-                    throw new Error(data.message || 'Error desconocido');
-                }
-            } catch (error) {
-                console.error('Error al actualizar preferencia de consejos de salud:', error);
-                
-                // Temporarily disable the watcher to prevent loops
-                this.initialLoadComplete = false;
-                
-                // Revert the checkbox to its previous state
-                this.healthTipsEnabled = !value;
-                
-                // Re-enable the watcher after a short delay
-                setTimeout(() => {
-                    this.initialLoadComplete = true;
-                }, 100);
-                
-                swal.fire({
-                    title: 'Error',
-                    text: 'No se pudo actualizar tu preferencia de consejos de salud. Inténtalo de nuevo más tarde.',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar'
-                });
-            } finally {
-                this.isSavingHealthTips = false;
-            }
-        },
-        
         async saveNotificationSettings() {
             this.isLoading = true;
-            
+
             try {
                 // Simular guardado (aquí se implementaría la llamada real a la API)
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
+                console.log("wants_health_tips: " + this.healthTipsEnabled);
+                console.log("wants_security_notifications: " + this.loginAlertsEnabled)
+                console.log("wants_app_notifications: " + this.appNotificationsEnabled)
+                // await new Promise(resolve => setTimeout(resolve, 1000));
+                const response = await fetch(API_URL + '/patients/update-notifications-preferences', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        wants_health_tips: this.healthTipsEnabled,
+                        wants_security_notifications: this.loginAlertsEnabled,
+                        wants_app_notifications: this.appNotificationsEnabled,
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al guardar preferencias');
+                }
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    swal.fire({
+                        title: 'Error',
+                        text: 'No se pudieron guardar tus preferencias. Inténtalo de nuevo más tarde.',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
                 // Mensaje de éxito
                 swal.fire({
                     title: 'Preferencias guardadas',
                     text: 'Tus preferencias de notificación se han actualizado correctamente',
                     icon: 'success',
                     confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    this.$router.push({name: 'PatientProfile'}).then(() => {
+                        window.location.reload();
+                    });
                 });
             } catch (error) {
                 console.error('Error al guardar preferencias:', error);
@@ -854,19 +773,5 @@ export default {
     .form-label {
         font-size: 0.8rem;
     }
-}
-
-/* Loading indicator for the toggle */
-.loading-indicator {
-    position: absolute;
-    top: 50%;
-    right: -25px;
-    transform: translateY(-50%);
-    color: #0d6efd;
-    font-size: 0.9rem;
-}
-
-.form-check.large-switch {
-    position: relative;
 }
 </style> 
