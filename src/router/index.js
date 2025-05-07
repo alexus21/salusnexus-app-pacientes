@@ -8,6 +8,7 @@ import RegisterPage from "@/components/register/RegisterPage.vue";
 import AddPaymentMethodComponent from "@/components/paymentmethod/AddPaymentMethodComponent.vue";
 import ClinicasComponent from "@/components/clinicas/ClinicasComponent.vue";
 import ReviewsComponent from "@/components/reviews/ReviewsComponent.vue";
+import ClinicHistoryComponent from "@/components/clinichistory/ClinicHistoryComponent.vue";
 
 import {validateAuth} from "@/utils/auth";
 import VerifyAccountComponent from "@/components/verifyaccount/VerifyAccountComponent.vue";
@@ -168,6 +169,15 @@ const routes = [
         path: '/paciente/resenas',
         name: 'PatientReviews',
         component: ReviewsComponent,
+        meta: {
+            requiresAuth: true,
+            hideHeader: true
+        }
+    },
+    {
+        path: '/paciente/historial-clinico',
+        name: 'PatientClinicHistory',
+        component: ClinicHistoryComponent,
         meta: {
             requiresAuth: true,
             hideHeader: true

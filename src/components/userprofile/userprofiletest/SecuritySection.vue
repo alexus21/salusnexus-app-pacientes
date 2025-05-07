@@ -80,7 +80,7 @@
                 <hr class="setting-divider">
 
                 <!-- Autenticación de dos factores -->
-                <div class="setting-item">
+<!--                <div class="setting-item">
                     <div class="setting-icon-wrapper bg-light-purple">
                         <i class="fas fa-mobile-alt text-purple"></i>
                     </div>
@@ -106,7 +106,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
             </div>
         </div>
 

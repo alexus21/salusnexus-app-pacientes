@@ -42,9 +42,9 @@
             <router-link to="/paciente/configuracion/notificaciones" class="nav-link" active-class="active">
                 <i class="fas fa-bell nav-icon"></i> Notificaciones
             </router-link>
-            <router-link to="/paciente/configuracion/configuracion" class="nav-link" active-class="active">
+<!--            <router-link to="/paciente/configuracion/configuracion" class="nav-link" active-class="active">
                 <i class="fas fa-cog nav-icon"></i> Configuración
-            </router-link>
+            </router-link>-->
         </nav>
 
         <div class="logout-section">

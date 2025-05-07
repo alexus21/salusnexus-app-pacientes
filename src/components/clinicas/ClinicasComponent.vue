@@ -53,9 +53,9 @@
                                    type="text">
                         </div>
                         <div class="search-actions">
-                            <button class="filter-button" @click="showFilterDialog = true">
+<!--                            <button class="filter-button" @click="showFilterDialog = true">
                                 <i class="fas fa-filter me-2"></i> Filtros
-                            </button>
+                            </button>-->
                             <button class="search-button" @click="searchClinics">Buscar</button>
                         </div>
                     </div>

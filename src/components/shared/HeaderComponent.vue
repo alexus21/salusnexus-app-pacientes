@@ -16,6 +16,12 @@
                         <span class="reviews-text">Reseñas</span>
                     </div>
 
+                    <div v-if="isUserVerified && !isInHistoryPage" class="history-icon me-3" title="Ver mi historial de clínicas"
+                         @click="navigateToHistory">
+                        <i class="fas fa-history"></i>
+                        <span class="history-text">Historial</span>
+                    </div>
+
                     <!-- Profile dropdown -->
                     <div class="dropdown">
                         <!-- Show profile image if available -->
@@ -52,6 +58,11 @@
                             <li v-if="isUserVerified && !isInReviewsPage">
                                 <router-link to="/paciente/resenas" class="dropdown-item">
                                     <i class="fas fa-star me-2"></i> Reseñas
+                                </router-link>
+                            </li>
+                            <li v-if="isUserVerified && !isInHistoryPage">
+                                <router-link to="/paciente/historial-clinico" class="dropdown-item">
+                                    <i class="fas fa-history me-2"></i> Historial Clínico
                                 </router-link>
                             </li>
                             <li>
@@ -106,6 +117,9 @@ export default {
         },
         isInReviewsPage() {
             return this.$route.path === '/paciente/resenas';
+        },
+        isInHistoryPage() {
+            return this.$route.path === '/paciente/historial-clinico';
         }
     },
     async mounted() {
@@ -168,6 +182,10 @@ export default {
 
         navigateToReviews() {
             this.$router.push({name: 'PatientReviews'});
+        },
+
+        navigateToHistory() {
+            this.$router.push({name: 'PatientClinicHistory'});
         }
     }
 }
@@ -243,7 +261,7 @@ export default {
     align-items: center;
 }
 
-.reviews-icon {
+.reviews-icon, .history-icon {
     font-size: 1rem;
     cursor: pointer;
     color: #495057;
@@ -260,12 +278,17 @@ export default {
     margin-right: 6px;
 }
 
-.reviews-text {
+.history-icon i {
+    color: #0d6efd;
+    margin-right: 6px;
+}
+
+.reviews-text, .history-text {
     font-size: 0.9rem;
     font-weight: 500;
 }
 
-.reviews-icon:hover {
+.reviews-icon:hover, .history-icon:hover {
     color: #0d6efd;
     background-color: #e0eeff;
     transform: translateY(-2px);
@@ -325,15 +348,15 @@ export default {
 
 /* Media Queries */
 @media (max-width: 768px) {
-    .reviews-text {
+    .reviews-text, .history-text {
         display: none;
     }
 
-    .reviews-icon {
+    .reviews-icon, .history-icon {
         padding: 6px;
     }
 
-    .reviews-icon i {
+    .reviews-icon i, .history-icon i {
         margin-right: 0;
     }
 }
