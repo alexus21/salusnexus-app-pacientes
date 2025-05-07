@@ -10,7 +10,7 @@
 
                 <!-- User profile section -->
                 <div class="header-user">
-                    <div v-if="isUserVerified" class="reviews-icon me-3" title="Calificar mis citas médicas"
+                    <div v-if="isUserVerified && !isInReviewsPage" class="reviews-icon me-3" title="Calificar mis citas médicas"
                          @click="navigateToReviews">
                         <i class="fas fa-star"></i>
                         <span class="reviews-text">Reseñas</span>
@@ -39,17 +39,17 @@
                             {{ userInitials }}
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li v-if="isUserVerified">
+                            <li v-if="isUserVerified && !isInProfilePage">
                                 <router-link to="/perfil" class="dropdown-item">
                                     <i class="fas fa-user me-2"></i> Ir al perfil
                                 </router-link>
                             </li>
-                            <li v-if="isUserVerified">
+                            <li v-if="isUserVerified && !isInFavoritesPage">
                                 <router-link to="/mis-favoritos" class="dropdown-item">
                                     <i class="fas fa-heart me-2"></i> Favoritos
                                 </router-link>
                             </li>
-                            <li v-if="isUserVerified">
+                            <li v-if="isUserVerified && !isInReviewsPage">
                                 <router-link to="/paciente/resenas" class="dropdown-item">
                                     <i class="fas fa-star me-2"></i> Reseñas
                                 </router-link>
@@ -97,6 +97,15 @@ export default {
             const lastInitial = lastName.charAt(0).toUpperCase();
 
             return firstInitial + lastInitial;
+        },
+        isInProfilePage() {
+            return this.$route.path.startsWith('/paciente/configuracion/perfil') || this.$route.path === '/perfil';
+        },
+        isInFavoritesPage() {
+            return this.$route.path === '/mis-favoritos';
+        },
+        isInReviewsPage() {
+            return this.$route.path === '/paciente/resenas';
         }
     },
     async mounted() {
