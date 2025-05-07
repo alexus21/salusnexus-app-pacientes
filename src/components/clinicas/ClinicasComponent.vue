@@ -135,7 +135,7 @@
             </div>
 
             <!-- Paginación -->
-            <div class="pagination-container d-flex justify-content-center mb-4">
+<!--            <div class="pagination-container d-flex justify-content-center mb-4">
                 <nav aria-label="Paginación de clínicas">
                     <ul class="pagination">
                         <li class="page-item">
@@ -153,7 +153,7 @@
                         </li>
                     </ul>
                 </nav>
-            </div>
+            </div>-->
 
             <!-- Diálogo de filtros -->
             <filter-dialog

@@ -10,7 +10,7 @@
 
                 <!-- User profile section -->
                 <div class="header-user">
-                    <div v-if="isUserVerified && !isInReviewsPage" class="reviews-icon me-3" title="Calificar mis citas médicas"
+                    <div v-if="isUserVerified && !isInReviewsPage && userSubscriptionType !== 'paciente_gratis'" class="reviews-icon me-3" title="Calificar mis citas médicas"
                          @click="navigateToReviews">
                         <i class="fas fa-star"></i>
                         <span class="reviews-text">Reseñas</span>
@@ -55,7 +55,7 @@
                                     <i class="fas fa-heart me-2"></i> Favoritos
                                 </router-link>
                             </li>
-                            <li v-if="isUserVerified && !isInReviewsPage">
+                            <li v-if="isUserVerified && !isInReviewsPage && userSubscriptionType !== 'paciente_gratis'">
                                 <router-link to="/paciente/resenas" class="dropdown-item">
                                     <i class="fas fa-star me-2"></i> Reseñas
                                 </router-link>
@@ -95,6 +95,7 @@ export default {
             hasProfileImage: false,
             userProfileImage: '',
             userData: null,
+            userSubscriptionType: null
         };
     },
     computed: {
@@ -150,6 +151,11 @@ export default {
 
                     this.userData = data.data;
                     localStorage.setItem('user', JSON.stringify(this.userData));
+                }
+                
+                // Set user subscription type
+                if (this.userData && this.userData.subscription_type) {
+                    this.userSubscriptionType = this.userData.subscription_type;
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);

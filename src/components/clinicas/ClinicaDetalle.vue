@@ -135,7 +135,7 @@
                     </div>-->
                     
                     <!-- Reviews Section -->
-                    <div class="card mb-4 reviews-card">
+                    <div class="card mb-4 reviews-card" v-if="userSubscriptionType !== 'paciente_gratis'">
                         <div class="card-body">
                             <div class="section-heading d-flex justify-content-between align-items-center">
                                 <h2>Reseñas y Valoraciones</h2>
@@ -409,7 +409,8 @@ export default {
                 average: 0,
                 total: 0,
                 distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
-            }
+            },
+            userSubscriptionType: null
         };
     },
     computed: {
@@ -427,10 +428,24 @@ export default {
             return;
         }
         
+        // Get user subscription type from localStorage
+        this.getUserSubscriptionType();
+        
         // Fetch clinic data
         this.fetchClinic();
     },
     methods: {
+        getUserSubscriptionType() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                if (userData && userData.subscription_type) {
+                    this.userSubscriptionType = userData.subscription_type;
+                    console.log('User subscription type:', this.userSubscriptionType);
+                }
+            } catch (error) {
+                console.error('Error getting user subscription type:', error);
+            }
+        },
         formatTime(time) {
             const [hours, minutes] = time.split(':');
             const period = hours >= 12 ? 'PM' : 'AM';
@@ -472,8 +487,10 @@ export default {
                 // Fetch schedules after clinic data loads successfully
                 this.fetchSchedules();
                 
-                // Fetch reviews
-                this.fetchReviews();
+                // Fetch reviews only if user has proper subscription
+                if (this.userSubscriptionType !== 'paciente_gratis') {
+                    this.fetchReviews();
+                }
                 
             } catch (error) {
                 console.error('Error al obtener datos de la clínica:', error);
