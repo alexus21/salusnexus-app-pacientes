@@ -18,7 +18,7 @@
             <div class="card-body">
 
                 <!-- Notificaciones de Correo - Tips de Salud -->
-                <div class="setting-item">
+                <div class="setting-item" v-if="subscription_type !== 'paciente_gratis'">
                     <div class="setting-icon-wrapper bg-light-purple">
                         <i class="fas fa-envelope text-purple"></i>
                     </div>
@@ -247,10 +247,14 @@ export default {
 
             // Estado
             isLoading: false,
-            settingsChanged: false
+            settingsChanged: false,
+
+            // Para las notificaciones de tips de salud:
+            subscription_type: this.user.subscription_type,
         };
     },
     mounted() {
+        console.log(this.user);
         // Establecer valores iniciales
         this.healthTipsEnabled = this.user.wants_health_tips;
         this.initialHealthTipsEnabled = this.user.wants_health_tips;
