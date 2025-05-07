@@ -254,7 +254,6 @@ export default {
         };
     },
     mounted() {
-        console.log(this.user);
         // Establecer valores iniciales
         this.healthTipsEnabled = this.user.wants_health_tips;
         this.initialHealthTipsEnabled = this.user.wants_health_tips;
