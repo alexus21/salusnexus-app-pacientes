@@ -293,10 +293,9 @@ export default {
                 // Prepare the current datetime in ISO format
                 const review_datetime = new Date().toISOString();
 
-                const isNewRating = (originalRating === rating && originalComment === comment);
-                const method = isNewRating ? 'POST' : 'PATCH';
-                const path = isNewRating ? 'add' : `edit/review/${appointmentId}`;
-                
+                const method = (originalRating === null ? 'POST' : 'PATCH') || (originalComment === null ? 'POST' : 'PATCH');
+                const path = (originalRating !== null ? `edit/review/${appointmentId}` : 'add') || (originalComment !== null ? `edit/review/${appointmentId}` : 'add');
+
                 // Send rating to the API
                 const response = await fetch(`${API_URL}/reviews/${path}`, {
                     method: method,
