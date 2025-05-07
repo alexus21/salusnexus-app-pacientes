@@ -64,10 +64,10 @@
                         </div>
                     </div>
                     <div class="hero-actions">
-                        <button class="btn btn-light btn-icon">
+<!--                        <button class="btn btn-light btn-icon">
                             <i class="far fa-heart"></i>
                             <span>Guardar</span>
-                        </button>
+                        </button>-->
                         <button 
                             v-if="clinic.subscription_type !== 'profesional_gratis'"
                             class="btn btn-primary btn-icon" 
