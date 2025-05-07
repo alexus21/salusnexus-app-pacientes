@@ -304,6 +304,7 @@ export default {
 <style scoped>
 .profile-section {
     position: relative;
+    min-height: calc(100vh - 140px); /* Ajustado para el header */
 }
 
 .section-header {
@@ -623,6 +624,10 @@ export default {
 
 /* Mobile devices (up to 767px) */
 @media (max-width: 767.98px) {
+    .profile-section {
+        min-height: calc(100vh - 100px); /* Ajustado para móvil */
+    }
+
     .section-header {
         flex-direction: column;
         align-items: flex-start;

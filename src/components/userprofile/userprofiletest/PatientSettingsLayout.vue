@@ -1,5 +1,6 @@
 <template>
     <div class="patient-settings-layout">
+        <HeaderComponent :isUserVerified="isVerified"/>
         <!-- Elementos decorativos de fondo -->
         <div class="decorative-blob blob-1"></div>
         <div class="decorative-blob blob-2"></div>
@@ -29,6 +30,7 @@
 
 <script>
 import SettingsSidebar from './SettingsSidebar.vue';
+import HeaderComponent from '@/components/shared/HeaderComponent.vue';
 import Swal from "sweetalert2";
 
 const API_URL = process.env.VUE_APP_API_URL;
@@ -37,7 +39,8 @@ const API_URL_IMAGE = process.env.VUE_APP_API_URL_IMAGE;
 export default {
     name: 'PatientSettingsLayout',
     components: {
-        SettingsSidebar
+        SettingsSidebar,
+        HeaderComponent
     },
     data() {
         return {
@@ -152,11 +155,11 @@ export default {
 
 <style scoped>
 .patient-settings-layout {
-    padding-top: 20px;
+    padding-top: 0;
     background-color: #F0F8FF;
-    min-height: calc(100vh - 60px);
+    min-height: 100vh;
     position: relative;
-    overflow: hidden; /* Para controlar los blobs decorativos */
+    overflow-x: hidden;
 }
 
 /* Elementos decorativos */
@@ -172,7 +175,7 @@ export default {
     background: linear-gradient(135deg, #0d6efd, #36b9cc);
     width: 600px;
     height: 600px;
-    top: -300px;
+    top: 60px;
     left: -200px;
     animation: float 15s ease-in-out infinite alternate;
 }
@@ -210,13 +213,14 @@ export default {
 .container-fluid {
     position: relative;
     z-index: 1;
+    padding-top: 20px;
 }
 
 .sidebar-container {
     background-color: #FFFFFF;
     padding: 25px 0;
     border-right: 1px solid rgba(13, 110, 253, 0.1);
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 140px); /* Ajustado para el header */
     box-shadow: 0 4px 25px rgba(13, 110, 253, 0.07);
     position: relative;
     z-index: 10;
@@ -227,6 +231,7 @@ export default {
     background-color: #F8FBFF;
     position: relative;
     z-index: 5;
+    min-height: calc(100vh - 140px); /* Ajustado para el header */
     background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230d6efd' fill-opacity='0.015' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
 }
 
@@ -263,16 +268,22 @@ export default {
         flex: 0 0 auto;
         width: 25%; /* 3 columns on tablets */
         padding: 20px 0;
+        min-height: calc(100vh - 120px); /* Ajustado para tablets */
     }
 
     .content-container {
         flex: 0 0 auto;
         width: 75%; /* 9 columns on tablets */
         padding: 25px 30px;
+        min-height: calc(100vh - 120px); /* Ajustado para tablets */
     }
 
     .decorative-blob {
         opacity: 0.04;
+    }
+
+    .blob-1 {
+        top: 50px;
     }
 }
 
@@ -280,6 +291,10 @@ export default {
 @media (max-width: 767.98px) {
     .patient-settings-layout {
         padding-top: 0;
+    }
+
+    .container-fluid {
+        padding-top: 10px;
     }
 
     .sidebar-container {
@@ -293,10 +308,16 @@ export default {
 
     .content-container {
         padding: 20px;
+        min-height: calc(100vh - 100px); /* Ajustado para móvil */
     }
 
     .decorative-blob {
-        opacity: 0.03; /* Reducir opacidad en móvil */
+        opacity: 0.03;
+    }
+
+    .blob-1 {
+        top: 40px;
+        transform: scale(0.8);
     }
 }
 
@@ -312,6 +333,10 @@ export default {
 
     .blob-1, .blob-2, .blob-3 {
         transform: scale(0.7);
+    }
+
+    .blob-1 {
+        top: 30px;
     }
 }
 
