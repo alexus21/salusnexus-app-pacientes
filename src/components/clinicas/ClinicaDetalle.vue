@@ -129,6 +129,91 @@
                         </div>
                     </div>
                     
+                    <!-- Reviews Section -->
+                    <div class="card mb-4 reviews-card">
+                        <div class="card-body">
+                            <div class="section-heading d-flex justify-content-between align-items-center">
+                                <h2>Reseñas y Valoraciones</h2>
+                                <div class="reviews-summary" v-if="reviews.length > 0">
+                                    <div class="rating-overview">
+                                        <div class="rating-score">
+                                            {{ averageRating.toFixed(1) }}
+                                            <span class="rating-max">/5</span>
+                                        </div>
+                                        <div class="rating-stars">
+                                            <i v-for="n in 5" :key="n" 
+                                               :class="['fas', n <= Math.round(averageRating) ? 'fa-star' : 'fa-star text-muted opacity-25']"></i>
+                                        </div>
+                                        <div class="rating-count">{{ reviews.length }} valoraciones</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Loading state -->
+                            <div v-if="loadingReviews" class="reviews-loading text-center py-4">
+                                <div class="spinner-pulse"></div>
+                                <p class="mt-3 text-muted">Cargando reseñas...</p>
+                            </div>
+
+                            <!-- Empty state -->
+                            <div v-else-if="reviews.length === 0" class="reviews-empty text-center py-4">
+                                <div class="empty-icon">
+                                    <i class="far fa-comment-dots"></i>
+                                </div>
+                                <h4 class="mt-3">No hay reseñas disponibles</h4>
+                                <p class="text-muted">Esta clínica aún no tiene reseñas de pacientes.</p>
+                            </div>
+
+                            <!-- Reviews list -->
+                            <div v-else class="reviews-container">
+                                <div class="rating-bars mb-4">
+                                    <div v-for="star in 5" :key="star" class="rating-bar-item">
+                                        <div class="rating-label">{{ star }} <i class="fas fa-star"></i></div>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar" :style="`width: ${getRatingPercentage(star)}%`"></div>
+                                        </div>
+                                        <div class="rating-count">{{ getStarCount(star) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="reviews-list">
+                                    <div v-for="review in reviews" :key="review.id" class="review-item">
+                                        <div class="review-header">
+                                            <div class="reviewer-info">
+                                                <div class="reviewer-avatar">
+                                                    <img :src="getProfileImage(review.profile_photo_path)" 
+                                                         :alt="review.patient_first_name"
+                                                         @error="handleAvatarError">
+                                                </div>
+                                                <div class="reviewer-details">
+                                                    <h5 class="reviewer-name">{{ review.patient_first_name }} {{ review.patient_last_name }}</h5>
+                                                    <div class="review-date">{{ formatReviewDate(review.review_datetime) }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="review-rating">
+                                                <i v-for="n in 5" :key="n" 
+                                                   :class="['fas', 'fa-star', n <= review.rating ? 'active' : '']"></i>
+                                            </div>
+                                        </div>
+                                        <div v-if="review.comment" class="review-content">
+                                            <p>{{ review.comment }}</p>
+                                        </div>
+                                        <div v-if="review.professional_response" class="review-response">
+                                            <div class="response-header">
+                                                <i class="fas fa-reply me-2"></i>
+                                                <span>Respuesta del profesional</span>
+                                                <small class="ms-2 text-muted" v-if="review.response_datetime">
+                                                    {{ formatReviewDate(review.response_datetime) }}
+                                                </small>
+                                            </div>
+                                            <p>{{ review.professional_response }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Schedule Section -->
                     <div class="card mb-4">
                         <div class="card-body">
@@ -301,8 +386,20 @@ export default {
             API_URL_IMAGE: API_URL_IMAGE,
             schedules: [],
             loading: true,
-            error: null
+            error: null,
+            reviews: [],
+            loadingReviews: true,
+            reviewStats: {
+                average: 0,
+                total: 0,
+                distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+            }
         };
+    },
+    computed: {
+        averageRating() {
+            return this.reviewStats.average;
+        }
     },
     created() {
         // Get clinic ID from route params
@@ -358,6 +455,9 @@ export default {
                 
                 // Fetch schedules after clinic data loads successfully
                 this.fetchSchedules();
+                
+                // Fetch reviews
+                this.fetchReviews();
                 
             } catch (error) {
                 console.error('Error al obtener datos de la clínica:', error);
@@ -439,6 +539,100 @@ export default {
                 console.error("Error fetching schedules:", error);
             }
         },
+        async fetchReviews() {
+            try {
+                this.loadingReviews = true;
+                const clinicId = this.$route.params.id;
+                
+                if (!clinicId) {
+                    console.warn('No clinic ID available for fetching reviews');
+                    this.loadingReviews = false;
+                    return;
+                }
+                
+                const response = await fetch(`${API_URL}/reviews/get/by-clinic/${clinicId}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                
+                // Set reviews
+                this.reviews = data.data || [];
+                
+                // Calculate review statistics
+                this.calculateReviewStats();
+                
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+            } finally {
+                this.loadingReviews = false;
+            }
+        },
+        calculateReviewStats() {
+            // Reset statistics
+            this.reviewStats = {
+                average: 0,
+                total: this.reviews.length,
+                distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+            };
+            
+            if (this.reviews.length === 0) return;
+            
+            // Calculate total rating
+            let totalRating = 0;
+            
+            // Count ratings by star
+            this.reviews.forEach(review => {
+                totalRating += review.rating;
+                
+                // Increment the count for this rating
+                if (review.rating >= 1 && review.rating <= 5) {
+                    this.reviewStats.distribution[review.rating]++;
+                }
+            });
+            
+            // Calculate average
+            this.reviewStats.average = totalRating / this.reviews.length;
+        },
+        getRatingPercentage(star) {
+            if (this.reviewStats.total === 0) return 0;
+            
+            const count = this.reviewStats.distribution[star] || 0;
+            return (count / this.reviewStats.total) * 100;
+        },
+        getStarCount(star) {
+            return this.reviewStats.distribution[star] || 0;
+        },
+        getProfileImage(photoPath) {
+            if (!photoPath) return 'https://via.placeholder.com/150?text=Usuario';
+            return `${API_URL_IMAGE}/${photoPath}`;
+        },
+        handleAvatarError(event) {
+            event.target.src = 'https://via.placeholder.com/150?text=Usuario';
+        },
+        formatReviewDate(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return dateString;
+            }
+        }
     },
 };
 </script>
@@ -449,6 +643,7 @@ export default {
     background-color: #f8f9fa;
     color: #212529;
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
 }
 
 /* Hero Section */
@@ -462,6 +657,7 @@ export default {
     align-items: flex-end;
     padding-bottom: 2rem;
     color: white;
+    transition: all 0.5s ease;
 }
 
 .overlay {
@@ -513,11 +709,13 @@ export default {
 .loading-container, .error-container {
     text-align: center;
     padding: 3rem 0;
+    animation: fadeIn 0.5s ease;
 }
 
 /* Hero Content */
 .clinic-hero-content {
     max-width: 800px;
+    animation: fadeInUp 0.5s ease-out;
 }
 
 .clinic-name {
@@ -585,6 +783,12 @@ export default {
     background-color: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     color: white;
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .hero-actions {
@@ -694,6 +898,20 @@ export default {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.card:nth-child(4) {
+    animation-delay: 0.3s;
 }
 
 .card:hover {
@@ -808,6 +1026,7 @@ export default {
 
 .service-item:hover {
     background-color: rgba(13, 110, 253, 0.05);
+    transform: translateX(5px);
 }
 
 .service-icon {
@@ -845,6 +1064,7 @@ export default {
 
 .schedule-item:hover {
     background-color: rgba(13, 110, 253, 0.05);
+    transform: translateX(5px);
 }
 
 .day-badge {
@@ -950,6 +1170,7 @@ export default {
 
 .contact-item:hover {
     background-color: rgba(13, 110, 253, 0.05);
+    transform: translateX(5px);
 }
 
 .contact-icon {
@@ -997,6 +1218,7 @@ export default {
 .map-placeholder i {
     font-size: 2rem;
     color: #0d6efd;
+    animation: pulse 1.5s infinite ease-in-out;
 }
 
 .location-address {
@@ -1013,6 +1235,300 @@ export default {
     margin-top: 0.2rem;
 }
 
+/* Reviews Styling */
+.reviews-card {
+    overflow: visible;
+}
+
+.reviews-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rating-overview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 10px;
+    padding: 0.8rem;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.rating-overview:hover {
+    background-color: #e9ecef;
+}
+
+.rating-score {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0d6efd;
+    line-height: 1;
+}
+
+.rating-max {
+    font-size: 1rem;
+    color: #adb5bd;
+    font-weight: 400;
+}
+
+.rating-stars {
+    margin: 0.5rem 0;
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+.rating-count {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.reviews-loading {
+    animation: fadeIn 0.5s ease;
+}
+
+.spinner-pulse {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    opacity: 0.7;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.reviews-empty {
+    animation: fadeIn 0.5s ease;
+}
+
+.empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    font-size: 1.5rem;
+}
+
+.rating-bars {
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.rating-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-label {
+    min-width: 40px;
+    font-size: 0.9rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.rating-label i {
+    color: #ffc107;
+    font-size: 0.8rem;
+}
+
+.rating-bar-container {
+    flex: 1;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.rating-bar {
+    height: 100%;
+    background-color: #0d6efd;
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+.rating-count {
+    min-width: 30px;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.reviews-list {
+    margin-top: 1.5rem;
+}
+
+.review-item {
+    padding: 1.2rem;
+    border-radius: 12px;
+    background-color: #f8f9fa;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.review-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.review-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.review-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.review-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.review-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.review-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    background-color: white;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.reviewer-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.reviewer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.review-item:hover .reviewer-avatar {
+    border-color: #0d6efd;
+}
+
+.reviewer-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.reviewer-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    color: #212529;
+}
+
+.review-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.review-rating {
+    display: flex;
+    gap: 0.2rem;
+    font-size: 0.9rem;
+    color: #ced4da;
+}
+
+.review-rating i.active {
+    color: #ffc107;
+}
+
+.review-content {
+    margin-bottom: 1rem;
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.review-response {
+    background-color: #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.response-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.review-response p {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+}
+
 /* Responsive Adjustments */
 @media (max-width: 992px) {
     .clinic-name {
@@ -1025,6 +1541,15 @@ export default {
     
     .stats-container {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reviews-summary {
+        margin-top: 1rem;
+    }
+
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
@@ -1069,6 +1594,15 @@ export default {
     .schedule-grid {
         grid-template-columns: 1fr;
     }
+
+    .review-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .review-rating {
+        align-self: flex-start;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1095,6 +1629,15 @@ export default {
     
     .stats-container {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .reviewer-name {
+        font-size: 0.9rem;
     }
 }
 </style> 
